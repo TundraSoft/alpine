@@ -17,10 +17,10 @@ RUN set -eux; \
   apk upgrade --update --no-cache; \
   apk add --no-cache tzdata wget libintl gettext; \
   cp /usr/bin/envsubst /usr/local/bin/envsubst; \
-  wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz -O /tmp/s6-overlay-noarch.tar.xz; \
-  wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64-${S6_OVERLAY_VERSION}.tar.xz -O /tmp/s6-overlay-x86_64.tar.xz; \
-  wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch-${S6_OVERLAY_VERSION}.tar.xz -O /tmp/s6-overlay-symlinks-noarch.tar.xz; \
-  wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz -O /tmp/syslogd-overlay-noarch.tar.xz; \
+  wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz -O /tmp/s6-overlay-noarch.tar.xz; \
+  wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz -O /tmp/s6-overlay-x86_64.tar.xz; \
+  wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz -O /tmp/s6-overlay-symlinks-noarch.tar.xz; \
+  wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch.tar.xz -O /tmp/syslogd-overlay-noarch.tar.xz; \
   tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz; \
   tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz; \
   tar -C / -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz; \
