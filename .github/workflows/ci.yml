@@ -10,7 +10,7 @@ on:
 
 env:
   LATEST_TAG: 3.15.3
-  S6_VERSION: 3.1.0.0
+  S6_VERSION: 3.1.0.1
 
 jobs:
   docker:
