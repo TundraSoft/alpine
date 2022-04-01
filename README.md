@@ -10,7 +10,7 @@ initialization and management of services.
 
 ## Installed Components
 
-### [`S6`]([!https://github.com/just-containers/s6-overlay#the-docker-way "S6 Github link") - 3.0.0.1
+### [`S6`]([!https://github.com/just-containers/s6-overlay#the-docker-way "S6 Github link") - 3.0.0.2
 
 The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images using s6 as a process supervisor.
 
