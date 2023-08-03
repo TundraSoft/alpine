@@ -1,0 +1,12 @@
+#!/usr/bin/with-contenv sh
+
+PGID=${PUID:-1000}
+UNAME='tundra'
+PGID=${PGID:-1000}
+GNAME='tundra'
+
+groupmod -o -g "$PGID" $GNAME
+usermod -o -u "$PUID" $UNAME
+
+# chown tundra:tundra -R /app
+setgroup /app

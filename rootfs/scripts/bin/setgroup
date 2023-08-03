@@ -1,0 +1,2 @@
+#!/bin/sh
+chown -R tundra:tundra "$@" || printf "**** Could not set permission for $@. ****\n**** Application may not work as intended ****"

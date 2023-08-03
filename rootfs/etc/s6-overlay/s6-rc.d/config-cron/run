@@ -1,0 +1,21 @@
+#!/command/with-contenv sh
+
+# Make sure crontab dir exists
+mkdir -p /etc/crontabs
+
+# Create crontab file
+if [ ! -f /etc/crontabs/crontab ]
+then
+  touch /etc/crontabs/crontab
+fi
+
+# Load the files
+for CronFiles in /crons/*
+do 
+  test -f "$CronFiles" || continue
+  echo "Importing ${CronFiles} to crontab" 
+  envsubst < ${CronFiles} >> /etc/crontabs/crontab
+done
+
+# Add to cron tab
+crontab /etc/crontabs/crontab;
