@@ -32,12 +32,12 @@ RUN set -eux; \
     # Set GLIBC variant also
     GLIBC_VARIANT='x86_64'; \
   fi; \
-  if [ $TARGETARCH == "arm64" ] || [[ $TARGETARCH == "arm" && $TARGETVARIANT == 'v8' ]]; \
+  if [ $TARGETARCH == "arm64" ] || [[ "${TARGETARCH}" == "arm" && "${TARGETVARIANT}" == 'v8' ]]; \
   then \
     wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-aarch64.tar.xz -O /tmp/s6-overlay-arch.tar.xz;\
     GLIBC_VARIANT='aarch64'; \
   fi; \
-  if [ $TARGETARCH == "arm" ] && [[ $TARGETVARIANT == 'v7' || $TARGETVARIANT == 'v6' ]]; \
+  if [ $TARGETARCH == "arm" ] && [[ "${TARGETVARIANT}" == 'v7' || "${TARGETVARIANT}" == 'v6' ]]; \
   then \
     wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-armhf.tar.xz -O /tmp/s6-overlay-arch.tar.xz;\
     GLIBC_VARIANT='armhf'; \
