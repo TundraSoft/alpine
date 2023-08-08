@@ -91,7 +91,7 @@ jobs:
         with:
           context: .
           # platforms: ${{ matrix.glibc == 1 && 'linux/amd64, linux/arm64/v8' || 'linux/amd64, linux/arm64/v8, linux/arm/v7' }}
-          platforms: linux/amd64,linux/arm64/v8
+          platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
           provenance: false
           build-args: |
             ALPINE_VERSION=${{ matrix.alpine-version }}
