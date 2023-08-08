@@ -9,7 +9,7 @@ ARG S6_OVERLAY_VERSION \
     GLIBC_VARIANT='x86_64' \
     TARGETPLATFORM \
     TARGETARCH \
-    TARGETVARIANT=${TARGETVARIANT:-''}
+    TARGETVARIANT
 
 ENV PUID=1000 \
     PGID=1000 \ 
@@ -25,19 +25,18 @@ RUN set -eux; \
   wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz \
         https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz \
         https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch.tar.xz -P /tmp/; \
-  echo "Fetching arch specific ${TARGETARCH} ${TARGETVARIANT} s6-overlay"; \
-  if [ $TARGETARCH == "amd64" ]; \
+  if [ "${TARGETARCH}" == "amd64" ]; \
   then \
     wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz -O /tmp/s6-overlay-arch.tar.xz;\
     # Set GLIBC variant also
     GLIBC_VARIANT='x86_64'; \
   fi; \
-  if [ $TARGETARCH == "arm64" ] || [[ "${TARGETARCH}" == "arm" && "${TARGETVARIANT}" == 'v8' ]]; \
+  if [ "${TARGETARCH}" == "arm64" ] || [[ "${TARGETARCH}" == "arm" && "${TARGETVARIANT}" == 'v8' ]]; \
   then \
     wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-aarch64.tar.xz -O /tmp/s6-overlay-arch.tar.xz;\
     GLIBC_VARIANT='aarch64'; \
   fi; \
-  if [ $TARGETARCH == "arm" ] && [[ "${TARGETVARIANT}" == 'v7' || "${TARGETVARIANT}" == 'v6' ]]; \
+  if [ "${TARGETARCH}" == "arm" ] && [[ "${TARGETVARIANT}" == 'v7' || "${TARGETVARIANT}" == 'v6' ]]; \
   then \
     wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-armhf.tar.xz -O /tmp/s6-overlay-arch.tar.xz;\
     GLIBC_VARIANT='armhf'; \
