@@ -10,3 +10,7 @@ usermod -o -u "$PUID" $UNAME
 
 # chown tundra:tundra -R /app
 setgroup /app
+setgroup /scripts/bin
+
+# ensure all scripts inside /scripts/bin are executable
+chmod +x /scripts/bin/*
