@@ -164,3 +164,6 @@ Added envsubst to help in applying environment variables in config files.
 GLIBC package is installed only if build argument WITH_GLIBC is set to 1 
 (docker image tundrasoft/alpine-glibc). 
 
+Currently installed version is set to 2,31-r0. 
+We use https://github.com/SatoshiPortal/alpine-pkg-glibc for the glibc package
+@TODO - Look at https://github.com/sgerrand/alpine-pkg-glibc
