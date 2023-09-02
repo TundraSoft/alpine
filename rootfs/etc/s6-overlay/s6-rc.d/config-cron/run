@@ -4,7 +4,7 @@
 mkdir -p /etc/crontabs
 
 # Create crontab file
-if [ ! -f /etc/crontabs/crontab ]
+if [ ! -f /etc/crontabs/crontab ];
 then
   touch /etc/crontabs/crontab
 fi
@@ -18,4 +18,5 @@ do
 done
 
 # Add to cron tab
+# crontab -u tundra /etc/crontabs/crontab;
 crontab /etc/crontabs/crontab;

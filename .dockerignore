@@ -1,5 +1,8 @@
 .git
-.gitignore
-.github
-.gitattributes
-README.md
+**/.gitignore
+**/.gitkeep
+**/.github
+**/.gitattributes
+**/.gitkeep
+**/*.md
+LICENSE

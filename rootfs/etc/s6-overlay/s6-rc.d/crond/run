@@ -1,2 +1,2 @@
 #!/command/with-contenv sh
-exec /usr/sbin/crond -f -l 2
+exec /usr/sbin/crond -f -l 8
