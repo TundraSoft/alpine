@@ -87,7 +87,7 @@ jobs:
           password: ${{ secrets.GIT_HUB_TOKEN }}
       -
         name: Build and push
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           # platforms: ${{ matrix.glibc == 1 && 'linux/amd64, linux/arm64/v8' || 'linux/amd64, linux/arm64/v8, linux/arm/v7' }}
