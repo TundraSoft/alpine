@@ -36,8 +36,7 @@ on id 1000 and 1000 (UID, GID respectively).
 
 ### Volumes
 
-You can set /crons and /app as a volume when running the container if you wish 
-to persist the data. 
+Provides an optional volume /crons where you can add crontab items. 
 
 ### Writing services
 

@@ -59,9 +59,7 @@ RUN set -eux; \
   rm -rf /tmp/* /var/cache/apk/*; \
   apk del wget gettext -r; \
   addgroup -g ${PGID} tundra; \
-  adduser -DH -s /sbin/nologin -u ${PUID} tundra -G tundra; \
-  mkdir -p /app; \
-  chown tundra:tundra /app;
+  adduser -DH -s /sbin/nologin -u ${PUID} tundra -G tundra;
 
 ADD /rootfs /
 
