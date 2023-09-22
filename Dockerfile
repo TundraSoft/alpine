@@ -2,7 +2,7 @@ ARG ALPINE_VERSION \
     WITH_GLIBC=0
 
 FROM alpine:${ALPINE_VERSION}
-LABEL maintainer="Abhinav A V <abhai2k@gmail.com>"
+LABEL maintainer="Abhinav A V <36784+abhai2k@users.noreply.github.com>"
 
 ARG S6_OVERLAY_VERSION \
     WITH_GLIBC \
