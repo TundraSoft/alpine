@@ -68,12 +68,18 @@ RUN set -eux; \
       "$ALPINE_GLIBC_BASE_URL/$ALPINE_GLIBC_PACKAGE_VERSION/$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
       "$ALPINE_GLIBC_BASE_URL/$ALPINE_GLIBC_PACKAGE_VERSION/$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
       "$ALPINE_GLIBC_BASE_URL/$ALPINE_GLIBC_PACKAGE_VERSION/$ALPINE_GLIBC_I18N_PACKAGE_FILENAME"; \
-    mv /etc/nsswitch.conf /etc/nsswitch.conf.bak; \
+    if [ -f /etc/nsswitch.conf ]; \
+      then \
+      mv /etc/nsswitch.conf /etc/nsswitch.conf.bak; \
+    fi; \
     apk add --no-cache --force-overwrite \
       "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
       "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
       "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME"; \
-    mv /etc/nsswitch.conf.bak /etc/nsswitch.conf; \
+    if [ -f /etc/nsswitch.conf.bak ]; \
+      then \
+      mv /etc/nsswitch.conf.bak /etc/nsswitch.conf; \
+    fi; \
     rm "/etc/apk/keys/sgerrand.rsa.pub"; \
     (/usr/glibc-compat/bin/localedef --force --inputfile POSIX --charmap UTF-8 "$LANG" || true); \
     echo "export LANG=$LANG" > /etc/profile.d/locale.sh; \
