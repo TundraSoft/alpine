@@ -16,8 +16,7 @@ ENV PUID=1000 \
     TZ="UTC" \
     S6_GLOBAL_PATH="/command:/usr/bin:/bin:/usr/sbin" \
     S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
-    PATH="/scripts/bin:$PATH" \
-    LANG=C.UTF-8
+    PATH="/scripts/bin:$PATH"
 
 RUN set -eux; \ 
   apk upgrade --update --no-cache; \
@@ -48,46 +47,14 @@ RUN set -eux; \
   tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz; \
   if [ $WITH_GLIBC == 1 ]; \
   then \
-    ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases/download"; \
-    ALPINE_GLIBC_PACKAGE_VERSION="2.34-r0"; \
-    ALPINE_GLIBC_BASE_PACKAGE_FILENAME="glibc-$ALPINE_GLIBC_PACKAGE_VERSION.apk"; \
-    ALPINE_GLIBC_BIN_PACKAGE_FILENAME="glibc-bin-$ALPINE_GLIBC_PACKAGE_VERSION.apk"; \
-    ALPINE_GLIBC_I18N_PACKAGE_FILENAME="glibc-i18n-$ALPINE_GLIBC_PACKAGE_VERSION.apk"; \
-    apk add --no-cache --virtual=.build-dependencies ca-certificates; \
-    echo \
-      "-----BEGIN PUBLIC KEY-----\
-      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApZ2u1KJKUu/fW4A25y9m\
-      y70AGEa/J3Wi5ibNVGNn1gT1r0VfgeWd0pUybS4UmcHdiNzxJPgoWQhV2SSW1JYu\
-      tOqKZF5QSN6X937PTUpNBjUvLtTQ1ve1fp39uf/lEXPpFpOPL88LKnDBgbh7wkCp\
-      m2KzLVGChf83MS0ShL6G9EQIAUxLm99VpgRjwqTQ/KfzGtpke1wqws4au0Ab4qPY\
-      KXvMLSPLUp7cfulWvhmZSegr5AdhNw5KNizPqCJT8ZrGvgHypXyiFvvAH5YRtSsc\
-      Zvo9GI2e2MaZyo9/lvb+LbLEJZKEQckqRj4P26gmASrZEPStwc+yqy1ShHLA0j6m\
-      1QIDAQAB\
-      -----END PUBLIC KEY-----" | sed 's/   */\n/g' > "/etc/apk/keys/sgerrand.rsa.pub"; \
-    wget \
-      "$ALPINE_GLIBC_BASE_URL/$ALPINE_GLIBC_PACKAGE_VERSION/$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
-      "$ALPINE_GLIBC_BASE_URL/$ALPINE_GLIBC_PACKAGE_VERSION/$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
-      "$ALPINE_GLIBC_BASE_URL/$ALPINE_GLIBC_PACKAGE_VERSION/$ALPINE_GLIBC_I18N_PACKAGE_FILENAME"; \
-    if [ ! -f /etc/nsswitch.conf ]; \
-      then \
-      echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' >> /etc/nsswitch.conf; \
-    fi; \
-    mv /etc/nsswitch.conf /etc/nsswitch.conf.bak; \
-    apk add --no-cache --force-overwrite \
-      "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
-      "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
-      "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME"; \
-    mv /etc/nsswitch.conf.bak /etc/nsswitch.conf; \
-    rm "/etc/apk/keys/sgerrand.rsa.pub"; \
-    (/usr/glibc-compat/bin/localedef --force --inputfile POSIX --charmap UTF-8 "$LANG" || true); \
-    echo "export LANG=$LANG" > /etc/profile.d/locale.sh; \
-    apk del glibc-i18n; \
-    rm "/root/.wget-hsts"; \
-    apk del .build-dependencies; \
-    rm \
-      "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
-      "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
-      "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME"; \
+    GLIBC_VERSION="$(curl -SL https://api.github.com/repos/SatoshiPortal/alpine-pkg-glibc/releases/latest | awk '/tag_name/{print $4;exit}' FS='[""]' | sed -e 's_v__')"     && echo "Using GLIBC Version: ${GLIBC_VERSION}"; \
+    wget "https://github.com/SatoshiPortal/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/cyphernode@satoshiportal.com.rsa.pub" -O /etc/apk/keys/cyphernode@satoshiportal.com.rsa.pub; \
+    wget https://github.com/SatoshiPortal/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}-${GLIBC_VARIANT}.apk -O glibc.apk; \
+    wget https://github.com/SatoshiPortal/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}-${GLIBC_VARIANT}.apk -O glibc-bin.apk; \
+    apk add --force-overwrite glibc-bin.apk glibc.apk; \
+    /usr/glibc-compat/sbin/ldconfig /lib /usr/glibc-compat/lib; \
+    echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' >> /etc/nsswitch.conf; \
+    rm -rf glibc.apk glibc-bin.apk /var/cache/apk/*; \
   fi; \
   rm -rf /tmp/* /var/cache/apk/*; \
   apk del wget gettext -r; \
