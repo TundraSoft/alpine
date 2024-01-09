@@ -40,7 +40,7 @@ jobs:
       matrix:
         alpine-version: ${{ fromJson(needs.get-versions.outputs.alpine-versions) }}
         s6-version: ${{ fromJson(needs.get-versions.outputs.s6-versions) }}
-        glibc: [ 0, 1 ]
+        # glibc: [ 0, 1 ]
     steps:
       -
         name: Checkout
@@ -60,10 +60,8 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            name=${{ github.repository }},enable=${{ matrix.glibc == 0 }}
-            name=${{ github.repository }}-glibc,enable=${{ matrix.glibc == 1 }}
-            name=ghcr.io/${{ github.repository }},enable=${{ matrix.glibc == 0 }}
-            name=ghcr.io/${{ github.repository }}-glibc,enable=${{ matrix.glibc == 1 }}
+            name=${{ github.repository }},enable=true
+            name=ghcr.io/${{ github.repository }},enable=true
           # generate Docker tags based on the following events/attributes
           # type=sha,prefix=,suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
           tags: |
@@ -96,7 +94,6 @@ jobs:
           build-args: |
             ALPINE_VERSION=${{ matrix.alpine-version }}
             S6_OVERLAY_VERSION=${{ matrix.s6-version }}
-            WITH_GLIBC=${{ matrix.glibc }}
           # We push only on main
           push: ${{ github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
           # push: true
