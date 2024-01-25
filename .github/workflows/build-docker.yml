@@ -111,8 +111,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm/v8,linux/arm/v7
-          provenance: false
           build-args: |
             ALPINE_VERSION=${{ matrix.alpine-version }}
             S6_OVERLAY_VERSION=${{ matrix.s6-version }}
