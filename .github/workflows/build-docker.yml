@@ -2,7 +2,11 @@ name: Build and Test Docker Image
 
 on:
   push:
-    branches: [ main ]
+    paths-ignore:
+      - .dockerignore
+      - .gitignore
+      - .github/ISSUE_TEMPLATE/*
+      - .github/PULL_REQUEST_TEMPLATE*
   pull_request:
     branches: [ main ]
 
