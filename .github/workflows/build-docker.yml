@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
+      max-parallel: 3
       matrix:
         alpine-version: ${{ fromJson(needs.setup.outputs.alpine-versions) }}
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
@@ -60,7 +61,13 @@ jobs:
     -
       name: Test
       run: |
-        echo "OK"
+        output=$(docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+          if [ "$output" == "OK" ]; then
+            echo "Test Passed"
+          else
+            echo "Test Failed"
+            exit 1
+          fi
   
   publish:
     needs: [setup, test]
