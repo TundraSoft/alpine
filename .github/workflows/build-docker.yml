@@ -1,155 +1,71 @@
-name: Docker Build
+name: Build and Test Docker Image
 
 on:
   push:
-    paths-ignore:
-      - .dockerignore
-      - .gitignore
-      - .github/ISSUE_TEMPLATE/*
-      - .github/PULL_REQUEST_TEMPLATE*
+    branches: [ main ]
   pull_request:
     branches: [ main ]
-  schedule:
-    - cron: '0 0 * * 0'
 
 jobs:
-  get-versions:
+  setup:
     runs-on: ubuntu-latest
     outputs:
-      alpine-versions: ${{ steps.alpine-versions.outputs.alpine-versions }}
-      s6-versions: ${{ steps.s6-versions.outputs.s6-versions }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - 
-        name: Get Alpine Versions
-        id: alpine-versions
-        run: |
-          ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 5 | tac | jq -Rcn '[inputs]')
-          echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
-      - 
-        name: Get S6 Versions
-        id: s6-versions
-        run: |
-          S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -vE "rc|alpha" | sort -V | tail -n 3 | tac | sed 's/v//g' | jq -Rcn '[inputs]')
-          echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
-  
-  build-base:
-    needs: [get-versions]
+    - id: set-matrix
+      run: |
+        ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v3.14/main/x86_64/ | grep -oP '(?<=alpine-base-)[0-9.]+(?=-)' | sort -V | tail -3 | jq -R . | jq -s .)
+        S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | sort -V | tail -3 | jq -R . | jq -s .)
+        echo "::set-output name=matrix::{\"alpine_version\":$ALPINE_VERSIONS, \"s6_version\":$S6_VERSIONS}"
+
+  build:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
-      matrix:
-        alpine-version: ${{ fromJson(needs.get-versions.outputs.alpine-versions) }}
-        s6-version: ${{ fromJson(needs.get-versions.outputs.s6-versions) }}
-        # glibc: [ 0, 1 ]
+      matrix: ${{fromJson(needs.setup.outputs.matrix)}}
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v4
-      -
-        # Add support for more platforms with QEMU (optional)
-        # https://github.com/docker/setup-qemu-action
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Console tags
-        run: |
-          echo "alpine-version=${{ matrix.alpine-version }}"
-          echo "s6-version=${{ matrix.s6-version }}"
-          echo "latest=${{ (matrix.alpine-version == fromJson(needs.get-versions.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.get-versions.outputs.s6-versions)[0]) }}"
-      -
-        name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          # list of Docker images to use as base name for tags
-          images: |
-            name=${{ github.repository }},enable=true
-            name=ghcr.io/${{ github.repository }},enable=true
-          # generate Docker tags based on the following events/attributes
-          # type=sha,prefix=,suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          # labels: |
-          #   org.opencontainers.image.source=${{ github.repositoryUrl }}
-          #   org.opencontainers.image.revision=${{ github.sha }}
-          #   org.opencontainers.image.created=${{ github.event.repository.pushed_at }}
-          #   org.opencontainers.image.authors=${{ github.actor }}
-          #   org.opencontainers.image.vendor=Tundrasoft
-          tags: |
-            type=raw,prefix=,value=latest,enable=${{ (matrix.alpine-version == fromJson(needs.get-versions.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.get-versions.outputs.s6-versions)[0]) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-            type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ matrix.alpine-version }}.0,enable=${{ matrix.s6-version == fromJson(needs.get-versions.outputs.s6-versions)[0] && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-            type=raw,prefix=,value=${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-      -
-        name: Login to DockerHub
-        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.event_name != 'pull_request'
-        uses: docker/login-action@v3 
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      -
-        name: Login to GHCR
-        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GIT_HUB_TOKEN }}
-      
-      -
-        name: Build and test
-        id: docker_build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          build-args: |
-            ALPINE_VERSION=${{ matrix.alpine-version }}
-            S6_OVERLAY_VERSION=${{ matrix.s6-version }}
-          load: true
-          tags: alpine-test-${{ matrix.alpine-version }}-${{ matrix.s6-version }}
-      -
-        name: Test
-        run: |
-          output=$(docker run --rm alpine-test-${{ matrix.alpine-version }}-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+    - uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    -
+      name: Login to DockerHub
+      if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.event_name != 'pull_request'
+      uses: docker/login-action@v3 
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    -
+      name: Login to GHCR
+      if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GIT_HUB_TOKEN }}
+
+    - name: Build and push
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: false
+        platforms: linux/amd64,linux/arm64
+        tags: |
+          ${{ github.repository }}2:alpine-${{ matrix.alpine_version }}-s6-${{ matrix.s6_version }}
+          ghcr.io/${{ github.repository }}2:alpine-${{ matrix.alpine_version }}-s6-${{ matrix.s6_version }}
+          ${{ (matrix.alpine_version == fromJson(needs.setup.outputs.matrix).alpine_version[0] && matrix.s6_version == fromJson(needs.setup.outputs.matrix).s6_version[0]) && '${{ github.repository }}2:latest, ghcr.io/${{ github.repository }}/alpine2:latest' }}
+        build-args: 
+          ALPINE_VERSION=${{ matrix.alpine_version }}
+          S6_VERSION=${{ matrix.s6_version }}
+
+    - name: Test
+      run: |
+        docker pull ${{ github.repository }}2:alpine-${{ matrix.alpine_version }}-s6-${{ matrix.s6_version }}
+        output=$(docker run --rm ${{ github.repository }}2:alpine-${{ matrix.alpine_version }}-s6-${{ matrix.s6_version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
           if [ "$output" == "OK" ]; then
             echo "Test Passed"
           else
             echo "Test Failed"
             exit 1
           fi
-      -
-        name: Build & Push
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm/v8,linux/arm/v7
-          provenance: false
-          build-args: |
-            ALPINE_VERSION=${{ matrix.alpine-version }}
-            S6_OVERLAY_VERSION=${{ matrix.s6-version }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-      -
-        name: Update repo description
-        uses: peter-evans/dockerhub-description@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${{ github.repository }}
-
-  dispatch:
-    needs: build-base
-    # Call only if from main branch
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    strategy:
-      matrix:
-        repo: ['TundraSoft/deno', 'TundraSoft/nginx']
-    runs-on: ubuntu-latest
-    steps:
-      - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GIT_HUB_TOKEN }}
-          repository: ${{ matrix.repo }}
-          event-type: build
