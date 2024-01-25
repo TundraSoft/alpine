@@ -14,15 +14,21 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      alpine-versions: ${{ steps.get-versions.outputs.alpine-versions }}
-      s6-versions: ${{ steps.get-versions.outputs.s6-versions }}
+      alpine-versions: ${{ steps.alpine-versions.outputs.alpine-versions }}
+      s6-versions: ${{ steps.s6-versions.outputs.s6-versions }}
     steps:
-    - id: get-versions
-      run: |
-        ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 5 | tac | jq -Rcn '[inputs]')
-        S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | sort -V | tail -3 | jq -R . | jq -s .)
-        echo "::set-output name=alpine-versions::${ALPINE_VERSIONS}"
-        echo "::set-output name=s6-versions::${S6_VERSIONS}"
+      - 
+        name: Get Alpine Versions
+        id: alpine-versions
+        run: |
+          ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 5 | tac | jq -Rcn '[inputs]')
+          echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
+      - 
+        name: Get S6 Versions
+        id: s6-versions
+        run: |
+          S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -vE "rc|alpha" | sort -V | tail -n 3 | tac | sed 's/v//g' | jq -Rcn '[inputs]')
+          echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
 
   build:
     needs: setup
