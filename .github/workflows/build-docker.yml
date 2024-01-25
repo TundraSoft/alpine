@@ -79,7 +79,6 @@ jobs:
 
     - name: Test
       run: |
-        docker pull tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
         output=$(docker run --rm ${{ github.repository }}2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
           if [ "$output" == "OK" ]; then
             echo "Test Passed"
