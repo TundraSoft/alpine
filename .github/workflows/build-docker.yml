@@ -64,6 +64,12 @@ jobs:
             name=ghcr.io/${{ github.repository }},enable=true
           # generate Docker tags based on the following events/attributes
           # type=sha,prefix=,suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          labels: |
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.repository.pushed_at }}
+            org.opencontainers.image.authors=${{ github.actor }}
+            org.opencontainers.image.vendor=Tundrasoft
           tags: |
             type=raw,prefix=,value=latest,enable=${{ matrix.alpine-version == fromJson(needs.get-versions.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.get-versions.outputs.s6-versions)[0] && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
             type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ matrix.alpine-version }}.0,enable=${{ matrix.s6-version == fromJson(needs.get-versions.outputs.s6-versions)[0] && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
@@ -83,20 +89,58 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GIT_HUB_TOKEN }}
+      # -
+      #   name: Build and push
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     # platforms: ${{ matrix.glibc == 1 && 'linux/amd64, linux/arm64/v8' || 'linux/amd64, linux/arm64/v8, linux/arm/v7' }}
+      #     platforms: linux/amd64,linux/arm/v8,linux/arm/v7
+      #     provenance: false
+      #     build-args: |
+      #       ALPINE_VERSION=${{ matrix.alpine-version }}
+      #       S6_OVERLAY_VERSION=${{ matrix.s6-version }}
+      #     # We push only on main
+      #     push: ${{ github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+      #     # push: true
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}
       -
-        name: Build and push
+        name: Build and test
+        id: docker_build
         uses: docker/build-push-action@v5
         with:
           context: .
-          # platforms: ${{ matrix.glibc == 1 && 'linux/amd64, linux/arm64/v8' || 'linux/amd64, linux/arm64/v8, linux/arm/v7' }}
           platforms: linux/amd64,linux/arm/v8,linux/arm/v7
           provenance: false
           build-args: |
             ALPINE_VERSION=${{ matrix.alpine-version }}
             S6_OVERLAY_VERSION=${{ matrix.s6-version }}
-          # We push only on main
-          push: ${{ github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          # push: true
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      -
+        name: Test
+        run: |
+          output=$(docker run --rm ${{ steps.docker_build.outputs.digest }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+          if [ "$output" == "OK" ]; then
+            echo "Test Passed"
+          else
+            echo "Test Failed"
+            exit 1
+          fi
+      -
+        name: Push
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm/v8,linux/arm/v7
+          provenance: false
+          build-args: |
+            ALPINE_VERSION=${{ matrix.alpine-version }}
+            S6_OVERLAY_VERSION=${{ matrix.s6-version }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
       -
