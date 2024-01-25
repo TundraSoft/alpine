@@ -10,11 +10,10 @@ fi
 # Set timezone
 if [ ! -f /usr/share/zoneinfo/${TZ} ]; then
   echo "Could not find time zone ${TZ}."
-  echo "Switching back to UTC"
-  TZ='UTC'
+  kill -s TERM 1
 fi
 
-printf "Setting timezone to ${TZ}...."
+# printf "Setting timezone to ${TZ}...."
 cp /usr/share/zoneinfo/${TZ} /etc/localtime
 echo $TZ >/etc/timezone
-printf "Done.\n"
+# printf "Done.\n"
