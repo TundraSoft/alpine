@@ -89,43 +89,28 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GIT_HUB_TOKEN }}
+      
       # -
-      #   name: Build and push
+      #   name: Build and test
+      #   id: docker_build
       #   uses: docker/build-push-action@v5
       #   with:
       #     context: .
-      #     # platforms: ${{ matrix.glibc == 1 && 'linux/amd64, linux/arm64/v8' || 'linux/amd64, linux/arm64/v8, linux/arm/v7' }}
-      #     platforms: linux/amd64,linux/arm/v8,linux/arm/v7
-      #     provenance: false
       #     build-args: |
       #       ALPINE_VERSION=${{ matrix.alpine-version }}
       #       S6_OVERLAY_VERSION=${{ matrix.s6-version }}
-      #     # We push only on main
-      #     push: ${{ github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-      #     # push: true
-      #     tags: ${{ steps.meta.outputs.tags }}
-      #     labels: ${{ steps.meta.outputs.labels }}
-      -
-        name: Build and test
-        id: docker_build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          build-args: |
-            ALPINE_VERSION=${{ matrix.alpine-version }}
-            S6_OVERLAY_VERSION=${{ matrix.s6-version }}
-          load: true
-          tags: alpine-test-${{ matrix.alpine-version }}-${{ matrix.s6-version }}
-      -
-        name: Test
-        run: |
-          output=$(docker run --rm alpine-test-${{ matrix.alpine-version }}-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
-          if [ "$output" == "OK" ]; then
-            echo "Test Passed"
-          else
-            echo "Test Failed"
-            exit 1
-          fi
+      #     load: true
+      #     tags: alpine-test-${{ matrix.alpine-version }}-${{ matrix.s6-version }}
+      # -
+      #   name: Test
+      #   run: |
+      #     output=$(docker run --rm alpine-test-${{ matrix.alpine-version }}-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+      #     if [ "$output" == "OK" ]; then
+      #       echo "Test Passed"
+      #     else
+      #       echo "Test Failed"
+      #       exit 1
+      #     fi
       -
         name: Build & Push
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
@@ -147,13 +132,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: ${{ github.repository }}
-      -
-        name: Update repo description
-        uses: peter-evans/dockerhub-description@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${{ github.repository }}-glibc
 
   dispatch:
     needs: build-base
