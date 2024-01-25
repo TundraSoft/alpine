@@ -14,19 +14,24 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      alpine-versions: ${{ steps.get-versions.outputs.alpine-versions }}
+      s6-versions: ${{ steps.get-versions.outputs.s6-versions }}
     steps:
-    - id: set-matrix
+    - id: get-versions
       run: |
         ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v3.14/main/x86_64/ | grep -oP '(?<=alpine-base-)[0-9.]+(?=-)' | sort -V | tail -3 | jq -R . | jq -s .)
         S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | sort -V | tail -3 | jq -R . | jq -s .)
-        echo "::set-output name=matrix::{\"alpine_version\":$ALPINE_VERSIONS, \"s6_version\":$S6_VERSIONS}"
+        echo "::set-output name=alpine-versions::${ALPINE_VERSIONS}"
+        echo "::set-output name=s6-versions::${S6_VERSIONS}"
 
   build:
     needs: setup
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{fromJson(needs.setup.outputs.matrix)}}
+      fail-fast: false
+      matrix:
+        alpine-version: ${{ fromJson(needs.setup.outputs.alpine-versions) }}
+        s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
     steps:
     - uses: actions/checkout@v2
 
@@ -56,17 +61,17 @@ jobs:
         push: false
         platforms: linux/amd64,linux/arm64
         tags: |
-          ${{ github.repository }}2:alpine-${{ matrix.alpine_version }}-s6-${{ matrix.s6_version }}
-          ghcr.io/${{ github.repository }}2:alpine-${{ matrix.alpine_version }}-s6-${{ matrix.s6_version }}
-          ${{ (matrix.alpine_version == fromJson(needs.setup.outputs.matrix).alpine_version[0] && matrix.s6_version == fromJson(needs.setup.outputs.matrix).s6_version[0]) && '${{ github.repository }}2:latest, ghcr.io/${{ github.repository }}/alpine2:latest' }}
+          ${{ github.repository }}2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+          ghcr.io/${{ github.repository }}2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+          ${{ (matrix.alpine-version == fromJson(needs.setup.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.setup.outputs.s6-versions)[0]) && '${{ github.repository }}2:latest, ghcr.io/${{ github.repository }}/alpine2:latest' }}
         build-args: 
           ALPINE_VERSION=${{ matrix.alpine_version }}
-          S6_VERSION=${{ matrix.s6_version }}
+          S6_VERSION=${{ matrix.s6-version }}
 
     - name: Test
       run: |
-        docker pull ${{ github.repository }}2:alpine-${{ matrix.alpine_version }}-s6-${{ matrix.s6_version }}
-        output=$(docker run --rm ${{ github.repository }}2:alpine-${{ matrix.alpine_version }}-s6-${{ matrix.s6_version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+        docker pull ${{ github.repository }}2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+        output=$(docker run --rm ${{ github.repository }}2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
           if [ "$output" == "OK" ]; then
             echo "Test Passed"
           else
