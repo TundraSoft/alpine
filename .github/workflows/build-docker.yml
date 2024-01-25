@@ -116,13 +116,12 @@ jobs:
           build-args: |
             ALPINE_VERSION=${{ matrix.alpine-version }}
             S6_OVERLAY_VERSION=${{ matrix.s6-version }}
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          load: true
+          tags: alpine-test
       -
         name: Test
         run: |
-          output=$(docker run --rm ${{ steps.docker_build.outputs.digest }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+          output=$(docker run --rm alpine-test /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
           if [ "$output" == "OK" ]; then
             echo "Test Passed"
           else
