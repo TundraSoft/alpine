@@ -115,11 +115,11 @@ jobs:
             ALPINE_VERSION=${{ matrix.alpine-version }}
             S6_OVERLAY_VERSION=${{ matrix.s6-version }}
           load: true
-          tags: alpine-test-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }}
+          tags: alpine-test-${{ matrix.alpine-version }}-${{ matrix.s6-version }}
       -
         name: Test
         run: |
-          output=$(docker run --rm alpine-test-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+          output=$(docker run --rm alpine-test-${{ matrix.alpine-version }}-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
           if [ "$output" == "OK" ]; then
             echo "Test Passed"
           else
