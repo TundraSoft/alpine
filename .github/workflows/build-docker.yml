@@ -19,7 +19,7 @@ jobs:
     steps:
     - id: get-versions
       run: |
-        ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v3.14/main/x86_64/ | grep -oP '(?<=alpine-base-)[0-9.]+(?=-)' | sort -V | tail -3 | jq -R . | jq -s .)
+        ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 5 | tac | jq -Rcn '[inputs]')
         S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | sort -V | tail -3 | jq -R . | jq -s .)
         echo "::set-output name=alpine-versions::${ALPINE_VERSIONS}"
         echo "::set-output name=s6-versions::${S6_VERSIONS}"
