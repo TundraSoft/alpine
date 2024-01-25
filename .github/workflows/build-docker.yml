@@ -21,7 +21,7 @@ jobs:
         name: Get Alpine Versions
         id: alpine-versions
         run: |
-          ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 5 | tac | jq -Rcn '[inputs]')
+          ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3 | tac | jq -Rcn '[inputs]')
           echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
       - 
         name: Get S6 Versions
@@ -69,7 +69,7 @@ jobs:
           fi
   
   publish:
-    needs: setup
+    needs: [setup, test]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
