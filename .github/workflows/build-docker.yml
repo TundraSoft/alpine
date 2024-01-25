@@ -63,12 +63,11 @@ jobs:
         echo "alpine-version=${{ matrix.alpine-version }}"
         echo "s6-version=${{ matrix.s6-version }}"
         echo "latest=${{ (matrix.alpine-version == fromJson(needs.setup.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.setup.outputs.s6-versions)[0]) && 'tundrasoft/alpine2:latest, ghcr.io/tundrasoft/alpine2:latest' }}"
-    - name: Build and push
+    - name: Build for Test
       uses: docker/build-push-action@v2
       with:
         context: .
         load: true
-        platforms: linux/amd64,linux/arm64
         tags: |
           tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
           ghcr.io/tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
@@ -86,9 +85,22 @@ jobs:
             echo "Test Failed"
             exit 1
           fi
-    - 
-      name: Push
-      run: |
-        docker push tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
-        docker push ghcr.io/tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
-        ${{ (matrix.alpine-version == fromJson(needs.setup.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.setup.outputs.s6-versions)[0]) && 'docker push tundrasoft/alpine2:latest && docker push ghcr.io/tundrasoft/alpine2:latest' }}
+    # - 
+    #   name: Push
+    #   run: |
+    #     docker push tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+    #     docker push ghcr.io/tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+    #     ${{ (matrix.alpine-version == fromJson(needs.setup.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.setup.outputs.s6-versions)[0]) && 'docker push tundrasoft/alpine2:latest && docker push ghcr.io/tundrasoft/alpine2:latest' }}
+
+    - name: Build for Test
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: |
+          tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+          ghcr.io/tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+          ${{ (matrix.alpine-version == fromJson(needs.setup.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.setup.outputs.s6-versions)[0]) && 'tundrasoft/alpine2:latest, ghcr.io/tundrasoft/alpine2:latest' }}
+        build-args: | 
+          ALPINE_VERSION=${{ matrix.alpine-version }}
+          S6_OVERLAY_VERSION=${{ matrix.s6-version }}
