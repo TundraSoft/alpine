@@ -67,11 +67,11 @@ jobs:
         push: false
         platforms: linux/amd64,linux/arm64
         tags: |
-          ${{ github.repository }}2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
-          ghcr.io/${{ github.repository }}2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
-          ${{ (matrix.alpine-version == fromJson(needs.setup.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.setup.outputs.s6-versions)[0]) && '${{ github.repository }}2:latest, ghcr.io/${{ github.repository }}/alpine2:latest' }}
+          tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+          ghcr.io/tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+          ${{ (matrix.alpine-version == fromJson(needs.setup.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.setup.outputs.s6-versions)[0]) && 'tundrasoft/alpine2:latest, ghcr.io/tundrasoft/alpine2:latest' }}
         build-args: 
-          ALPINE_VERSION=${{ matrix.alpine_version }}
+          ALPINE_VERSION=${{ matrix.alpine-version }}
           S6_VERSION=${{ matrix.s6-version }}
 
     - name: Test
