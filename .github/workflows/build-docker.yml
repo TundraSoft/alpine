@@ -75,7 +75,7 @@ jobs:
           tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
           ghcr.io/tundrasoft/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
           ${{ (matrix.alpine-version == fromJson(needs.setup.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.setup.outputs.s6-versions)[0]) && 'tundrasoft/alpine2:latest, ghcr.io/tundrasoft/alpine2:latest' }}
-        build-args: 
+        build-args: |
           ALPINE_VERSION=${{ matrix.alpine-version }}
           S6_OVERLAY_VERSION=${{ matrix.s6-version }}
 
