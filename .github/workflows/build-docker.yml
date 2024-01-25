@@ -53,6 +53,11 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      - name: Console tags
+        run: |
+          echo "alpine-version=${{ matrix.alpine-version }}"
+          echo "s6-version=${{ matrix.s6-version }}"
+          echo "latest=${{ (matrix.alpine-version == fromJson(needs.get-versions.outputs.alpine-versions)[0] && matrix.s6-version == fromJson(needs.get-versions.outputs.s6-versions)[0]) }}"
       -
         name: Docker meta
         id: meta
