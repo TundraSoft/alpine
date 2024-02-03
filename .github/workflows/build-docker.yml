@@ -21,14 +21,42 @@ jobs:
         name: Get Alpine Versions
         id: alpine-versions
         run: |
-          ALPINE_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3 | tac | jq -Rcn '[inputs]')
+          ALPINE_MINOR_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3 | tac | jq -Rcn '[inputs]')
+          ALPINE_VERSIONS=""
+
+          for VERSION in $ALPINE_MINOR_VERSIONS
+          do
+            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-base-)[0-9.]+(?=-)' | sort -V | tail -n 3)
+            for PATCH in $PATCH_VERSIONS
+            do
+              ALPINE_VERSIONS+="${PATCH} "
+            done
+          done
+
+          ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | jq -Rcn '[inputs]')
+          # echo "::set-output name=matrix::{\"alpine_version\":$ALPINE_VERSIONS}"
           echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
       - 
         name: Get S6 Versions
         id: s6-versions
         run: |
-          S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -vE "rc|alpha" | sort -V | tail -n 3 | tac | sed 's/v//g' | jq -Rcn '[inputs]')
+          S6_VERSIONS=""
+
+          # Fetch the latest 3 minor versions
+          MINOR_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -oP '^v[0-9]+\.[0-9]+' | sort -Vu | tail -n 3)
+
+          for VERSION in $MINOR_VERSIONS
+          do
+            # Fetch the latest patch version for each minor version
+            PATCH_VERSION=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep "^${VERSION}" | sort -V | tail -n 1)
+            S6_VERSIONS+="${PATCH_VERSION#v} "
+          done
+
+          S6_VERSIONS=$(echo $S6_VERSIONS | jq -Rcn '[inputs]')
+          # echo "::set-output name=matrix::{\"s6_version\":$S6_VERSIONS}"
           echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
+          # S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -vE "rc|alpha" | sort -V | tail -n 3 | tac | sed 's/v//g' | jq -Rcn '[inputs]')
+          # echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
 
   test:
     needs: setup
