@@ -7,7 +7,6 @@
 
 [![Repo size](https://img.shields.io/github/repo-size/tundrasoft/alpine?logo=github)](#)
 [![Docker image size](https://img.shields.io/docker/image-size/tundrasoft/alpine?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
-[![Docker image size glibc](https://img.shields.io/docker/image-size/tundrasoft/alpine-glibc?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine-glibc)
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
 [![Docker Pulls (glibc)](https://img.shields.io/docker/pulls/tundrasoft/alpine-glibc.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine-glibc)
