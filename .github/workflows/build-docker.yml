@@ -11,6 +11,7 @@ on:
     branches: [ main ]
 
 jobs:
+
   setup:
     runs-on: ubuntu-latest
     outputs:
@@ -25,7 +26,6 @@ jobs:
         run: |
           ALPINE_MINOR_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3)
           ALPINE_VERSIONS=""
-
           for VERSION in $ALPINE_MINOR_VERSIONS
           do
             PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 3)
@@ -34,32 +34,26 @@ jobs:
               ALPINE_VERSIONS+="${PATCH} "
             done
           done
-
           ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs]')
-          # echo "::set-output name=matrix::{\"alpine_version\":$ALPINE_VERSIONS}"
-          echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
+          IFS=$'\n' sorted_alpine_versions=($(sort -V <<<"${ALPINE_VERSIONS[*]}"))
+          echo "alpine-versions=${sorted_alpine_versions}" >> "$GITHUB_OUTPUT"
           
       - 
         name: Get S6 Versions
         id: s6-versions
         run: |
           S6_VERSIONS=""
-
           # Fetch the latest 3 minor versions
           MINOR_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -oP '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -Vu | tail -n 3)
-
           for VERSION in $MINOR_VERSIONS
           do
             # Fetch the latest patch version for each minor version
             PATCH_VERSION=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep "^${VERSION}" | sort -V | tail -n 1)
             S6_VERSIONS+="${PATCH_VERSION#v} "
           done
-
           S6_VERSIONS=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs]')
-          # echo "::set-output name=matrix::{\"s6_version\":$S6_VERSIONS}"
-          echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
-          # S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -vE "rc|alpha" | sort -V | tail -n 3 | tac | sed 's/v//g' | jq -Rcn '[inputs]')
-          # echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
+          IFS=$'\n' sorted_s6_versions=($(sort -V <<<"${S6_VERSIONS[*]}"))
+          echo "s6-versions=${sorted_s6_versions}" >> "$GITHUB_OUTPUT"
       
       - 
         name: Get Latest Versions
@@ -69,8 +63,9 @@ jobs:
           s6_versions=(${{ fromJson(steps.s6-versions.outputs.s6-versions) }})
           IFS=$'\n' sorted_alpine_versions=($(sort -V <<<"${alpine_versions[*]}"))
           IFS=$'\n' sorted_s6_versions=($(sort -V <<<"${s6_versions[*]}"))
-          echo "::set-output name=latest-alpine-version::${sorted_alpine_versions[-1]}"
-          echo "::set-output name=latest-s6-version::${sorted_s6_versions[-1]}"
+          echo "latest-alpine-version=${sorted_alpine_versions[-1]}" >> "$GITHUB_OUTPUT"
+          echo "latest-s6-version=${sorted_s6_versions[-1]}" >> "$GITHUB_OUTPUT"
+  
   test:
     needs: setup
     runs-on: ubuntu-latest
@@ -86,6 +81,33 @@ jobs:
     - 
       name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
+    -
+      name: Meta Tags
+      id: meta-tags
+      uses: docker/metadata-action@v5
+      with:
+        flavor: |
+          latest=false
+        # list of Docker images to use as base name for tags
+        images: |
+          name=${{ github.repository }},enable=true
+          name=ghcr.io/${{ github.repository }},enable=true
+        # generate Docker tags based on the following events/attributes
+        # type=sha,prefix=,suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+        labels: |
+          org.opencontainers.image.source=${{ github.repositoryUrl }}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.created=${{ github.event.repository.pushed_at }}
+          org.opencontainers.image.authors=${{ github.actor }}
+          org.opencontainers.image.vendor=Tundrasoft
+          org.opencontainers.image.licenses=MIT
+          org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
+          org.opencontainers.image.description=Alpine Linux with S6 Overlay
+          org.opencontainers.image.title=Alpine Linux with S6 Overlay
+        tags: |
+          type=raw,prefix=,value=latest,enable=${{ (matrix.alpine-version == needs.setup.outputs.latest-alpine-version && matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ matrix.alpine-version }},enable=${{ (matrix.alpine-version == needs.setup.outputs.latest-alpine-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,prefix=,value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     
     -
       name: Build for Test
@@ -188,8 +210,7 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         repository: ${{ github.repository }}
-        
-
+  
   dispatch:
     needs: publish
     # Call only if from main branch
