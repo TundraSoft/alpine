@@ -65,7 +65,19 @@ jobs:
           IFS=$'\n' sorted_s6_versions=($(sort -V <<<"${s6_versions[*]}"))
           echo "latest-alpine-version=${sorted_alpine_versions[-1]}" >> "$GITHUB_OUTPUT"
           echo "latest-s6-version=${sorted_s6_versions[-1]}" >> "$GITHUB_OUTPUT"
-  
+      - 
+        name: Debug
+        run: |
+          cat $GITHUB_OUTPUT
+      -
+        name: Alpine Latest
+        run: |
+          echo ${{ steps.latest-versions.outputs.latest-alpine-version }}
+      
+      -
+        name: S6 Latest
+        run: |
+          echo ${{ steps.latest-versions.outputs.latest-s6-version }}
   test:
     needs: setup
     runs-on: ubuntu-latest
