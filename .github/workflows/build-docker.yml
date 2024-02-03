@@ -35,7 +35,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
-      max-parallel: 3
       matrix:
         alpine-version: ${{ fromJson(needs.setup.outputs.alpine-versions) }}
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
@@ -64,7 +63,9 @@ jobs:
       run: |
         echo ${{ steps.build.outputs.digest }}
         echo ${{ steps.build.outputs.imageid }}
-        docker run --rm local/alpine2@${{ steps.build.outputs.digest }}
+        IMG_ID="${${{ steps.build.outputs.digest }}//sha256:/}"
+        echo $IMG_ID
+        docker run --rm $IMG_ID
         # docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
         # output=$(docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
         #   if [ "$output" == "OK" ]; then
