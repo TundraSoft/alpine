@@ -9,6 +9,9 @@ on:
       - .github/PULL_REQUEST_TEMPLATE*
   pull_request:
     branches: [ main ]
+  schedule:
+    - 
+      cron: '0 0 * * 0'
 
 jobs:
 
