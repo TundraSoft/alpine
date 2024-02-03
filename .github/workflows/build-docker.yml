@@ -49,6 +49,7 @@ jobs:
     
     -
       name: Build for Test
+      id: build
       uses: docker/build-push-action@v2
       with:
         context: .
@@ -61,7 +62,8 @@ jobs:
     -
       name: Test
       run: |
-        docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+        echo ${{ steps.build.outputs.digest }}
+        # docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
         # output=$(docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
         #   if [ "$output" == "OK" ]; then
         #     echo "Test Passed"
