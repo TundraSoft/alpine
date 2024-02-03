@@ -61,11 +61,9 @@ jobs:
     -
       name: Test
       run: |
-        echo ${{ steps.build.outputs.digest }}
-        echo ${{ steps.build.outputs.imageid }}
         IMG_ID="${${{ steps.build.outputs.digest }}//sha256:/}"
         echo $IMG_ID
-        docker run --rm $IMG_ID
+        docker run --rm ${{ steps.build.outputs.imageid }}
         # docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
         # output=$(docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
         #   if [ "$output" == "OK" ]; then
