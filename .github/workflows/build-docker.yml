@@ -160,6 +160,7 @@ jobs:
         tags: |
           type=raw,prefix=,value=latest,enable=${{ (matrix.alpine-version == needs.setup.outputs.latest-alpine-version && matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
           type=semver,prefix=,pattern={{major}}.{{minor}}.{{patch}},value=${{ matrix.alpine-version }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ matrix.alpine-version }},enable=${{ (matrix.alpine-version !~ /\d+\.\d+\.\d+/) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
           #type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ matrix.alpine-version }},enable=${{ (matrix.alpine-version == needs.setup.outputs.latest-alpine-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
           type=raw,prefix=,value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
