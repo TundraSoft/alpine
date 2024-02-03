@@ -9,7 +9,6 @@
 [![Docker image size](https://img.shields.io/docker/image-size/tundrasoft/alpine?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
-[![Docker Pulls (glibc)](https://img.shields.io/docker/pulls/tundrasoft/alpine-glibc.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine-glibc)
 
 This is a base docker image used throughout all docker builds. This image 
 uses s6-overlay to help with initialization and management of services, crond 
@@ -115,7 +114,7 @@ can inherit the cron job and specify their own.
 The image can be built using the below command
 
 ```sh
-docker build --no-cache --build-arg ALPINE_VERSION=3.17.1 --build-arg S6_OVERLAY_VERSION=3.1.3.0 -t tundrasoft/alpine .
+docker build --no-cache --build-arg ALPINE_VERSION=3.19.1 --build-arg S6_OVERLAY_VERSION=3.1.3.0 -t tundrasoft/alpine .
 ```
 
 ### Build Arguments
