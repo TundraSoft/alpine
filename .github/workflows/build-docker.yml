@@ -21,19 +21,19 @@ jobs:
         name: Get Alpine Versions
         id: alpine-versions
         run: |
-          ALPINE_MINOR_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3 | tac | jq -Rcn '[inputs]')
+          ALPINE_MINOR_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3)
           ALPINE_VERSIONS=""
 
           for VERSION in $ALPINE_MINOR_VERSIONS
           do
-            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=netboot-)[0-9.]+(?=-)' | sort -V | tail -n 3)
+            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 3)
             for PATCH in $PATCH_VERSIONS
             do
               ALPINE_VERSIONS+="${PATCH} "
             done
           done
 
-          ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | jq -Rcn '[inputs]')
+          ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs]')
           # echo "::set-output name=matrix::{\"alpine_version\":$ALPINE_VERSIONS}"
           echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
       - 
@@ -52,7 +52,7 @@ jobs:
             S6_VERSIONS+="${PATCH_VERSION#v} "
           done
 
-          S6_VERSIONS=$(echo $S6_VERSIONS | jq -Rcn '[inputs]')
+          S6_VERSIONS=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs]')
           # echo "::set-output name=matrix::{\"s6_version\":$S6_VERSIONS}"
           echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
           # S6_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -vE "rc|alpha" | sort -V | tail -n 3 | tac | sed 's/v//g' | jq -Rcn '[inputs]')
@@ -74,22 +74,21 @@ jobs:
       name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
     
-    # -
-    #   name: Build for Test
-    #   id: build
-    #   uses: docker/build-push-action@v2
-    #   with:
-    #     context: .
-    #     load: true
-    #     tags: |
-    #       local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
-    #     build-args: | 
-    #       ALPINE_VERSION=${{ matrix.alpine-version }}
-    #       S6_OVERLAY_VERSION=${{ matrix.s6-version }}
+    -
+      name: Build for Test
+      id: build
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        load: true
+        tags: |
+          local/alpine2:test
+        build-args: | 
+          ALPINE_VERSION=${{ matrix.alpine-version }}
+          S6_OVERLAY_VERSION=${{ matrix.s6-version }}
     -
       name: Test
       run: |
-        docker build --build-arg ALPINE_VERSION=${{ matrix.alpine-version }} --build-arg S6_OVERLAY_VERSION=${{ matrix.s6-version }} -t local/alpine2:test .
         output=$(docker run --rm local/alpine2:test /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
         if [ "$output" == "OK" ]; then
           echo "Test Passed"
@@ -97,17 +96,6 @@ jobs:
           echo "Test Failed"
           exit 1
         fi
-        # IMG_ID="${${{ steps.build.outputs.digest }}//sha256:/}"
-        # echo $IMG_ID
-        # docker run --rm ${{ steps.build.outputs.imageid }}
-        # docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
-        # output=$(docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
-        #   if [ "$output" == "OK" ]; then
-        #     echo "Test Passed"
-        #   else
-        #     echo "Test Failed"
-        #     exit 1
-        #   fi
   
   publish:
     needs: [setup, test]
