@@ -17,8 +17,8 @@ jobs:
     outputs:
       alpine-versions: ${{ steps.alpine-versions.outputs.alpine-versions }}
       s6-versions: ${{ steps.s6-versions.outputs.s6-versions }}
-      latest-alpine-version: ${{ steps.latest-versions.outputs.latest-alpine-version }}
-      latest-s6-version: ${{ steps.latest-versions.outputs.latest-s6-version }}
+      latest-alpine-version: ${{ steps.alpine-versions.outputs.latest-alpine-version }}
+      latest-s6-version: ${{ steps.s6-versions.outputs.latest-s6-version }}
     steps:
       - 
         name: Get Alpine Versions
@@ -34,9 +34,10 @@ jobs:
               ALPINE_VERSIONS+="${PATCH} "
             done
           done
-          ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs]')
-          IFS=$'\n' sorted_alpine_versions=($(sort -V <<<"${ALPINE_VERSIONS[*]}"))
+          ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
+          LATEST_VERSION=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
           echo "alpine-versions=${sorted_alpine_versions}" >> "$GITHUB_OUTPUT"
+          echo "::set-output name=latest-alpine-version::${LATEST_VERSION}"
           
       - 
         name: Get S6 Versions
@@ -51,20 +52,11 @@ jobs:
             PATCH_VERSION=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep "^${VERSION}" | sort -V | tail -n 1)
             S6_VERSIONS+="${PATCH_VERSION#v} "
           done
-          S6_VERSIONS=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs]')
-          IFS=$'\n' sorted_s6_versions=($(sort -V <<<"${S6_VERSIONS[*]}"))
+          S6_VERSIONS=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
+          LATEST_VERSION=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
           echo "s6-versions=${sorted_s6_versions}" >> "$GITHUB_OUTPUT"
+          echo "::set-output name=latest-s6-version::${LATEST_VERSION}"
       
-      - 
-        name: Get Latest Versions
-        id: latest-versions
-        run: |
-          readarray -t alpine_versions <<< "${{ fromJson(steps.alpine-versions.outputs.alpine-versions) }}"
-          readarray -t s6_versions <<< "${{ fromJson(steps.s6-versions.outputs.s6-versions) }}"
-          IFS=$'\n' sorted_alpine_versions=($(sort -V <<<"${alpine_versions[*]}"))
-          IFS=$'\n' sorted_s6_versions=($(sort -V <<<"${s6_versions[*]}"))
-          echo "::set-output name=latest-alpine-version::${sorted_alpine_versions[-1]}"
-          echo "::set-output name=latest-s6-version::${sorted_s6_versions[-1]}"
       - 
         name: Debug
         run: |
@@ -72,12 +64,12 @@ jobs:
       -
         name: Alpine Latest
         run: |
-          echo ${{ steps.latest-versions.outputs.latest-alpine-version }}
+          echo ${{ steps.alpine-versions.outputs.latest-alpine-version }}
       
       -
         name: S6 Latest
         run: |
-          echo ${{ steps.latest-versions.outputs.latest-s6-version }}
+          echo ${{ steps.s6-versions.outputs.latest-s6-version }}
   test:
     needs: setup
     runs-on: ubuntu-latest
