@@ -46,24 +46,32 @@ jobs:
       name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
     
-    -
-      name: Build for Test
-      id: build
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        load: true
-        tags: |
-          local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
-        build-args: | 
-          ALPINE_VERSION=${{ matrix.alpine-version }}
-          S6_OVERLAY_VERSION=${{ matrix.s6-version }}
+    # -
+    #   name: Build for Test
+    #   id: build
+    #   uses: docker/build-push-action@v2
+    #   with:
+    #     context: .
+    #     load: true
+    #     tags: |
+    #       local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
+    #     build-args: | 
+    #       ALPINE_VERSION=${{ matrix.alpine-version }}
+    #       S6_OVERLAY_VERSION=${{ matrix.s6-version }}
     -
       name: Test
       run: |
-        IMG_ID="${${{ steps.build.outputs.digest }}//sha256:/}"
-        echo $IMG_ID
-        docker run --rm ${{ steps.build.outputs.imageid }}
+        docker build --build-arg ALPINE_VERSION=${{ matrix.alpine-version }} --build-arg S6_OVERLAY_VERSION=${{ matrix.s6-version }} -t local/alpine2:test .
+        output=$(docker run --rm local/alpine2:test /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+        if [ "$output" == "OK" ]; then
+          echo "Test Passed"
+        else
+          echo "Test Failed"
+          exit 1
+        fi
+        # IMG_ID="${${{ steps.build.outputs.digest }}//sha256:/}"
+        # echo $IMG_ID
+        # docker run --rm ${{ steps.build.outputs.imageid }}
         # docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }}
         # output=$(docker run --rm local/alpine2:alpine-${{ matrix.alpine-version }}-s6-${{ matrix.s6-version }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
         #   if [ "$output" == "OK" ]; then
