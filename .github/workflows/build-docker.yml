@@ -220,6 +220,9 @@ jobs:
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     steps:
+      - 
+        uses: actions/checkout@v2
+        
       -
         name: Update repo description
         uses: peter-evans/dockerhub-description@v3
@@ -242,7 +245,5 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.GIT_HUB_TOKEN }}
-          repository: |
-            TundraSoft/deno
-            TundraSoft/nginx
+          repository: ${{ matrix.repo }}
           event-type: build
