@@ -37,7 +37,7 @@ jobs:
           ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
           LATEST_VERSION=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
           echo "alpine-versions=${sorted_alpine_versions}" >> "$GITHUB_OUTPUT"
-          echo "::set-output name=latest-alpine-version::${LATEST_VERSION}"
+          echo "latest-alpine-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
           
       - 
         name: Get S6 Versions
@@ -55,7 +55,7 @@ jobs:
           S6_VERSIONS=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
           LATEST_VERSION=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
           echo "s6-versions=${sorted_s6_versions}" >> "$GITHUB_OUTPUT"
-          echo "::set-output name=latest-s6-version::${LATEST_VERSION}"
+          echo "latest-s6-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
       
       - 
         name: Debug
