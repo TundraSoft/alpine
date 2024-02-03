@@ -26,7 +26,7 @@ jobs:
 
           for VERSION in $ALPINE_MINOR_VERSIONS
           do
-            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-base-)[0-9.]+(?=-)' | sort -V | tail -n 3)
+            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=netboot-)[0-9.]+(?=-)' | sort -V | tail -n 3)
             for PATCH in $PATCH_VERSIONS
             do
               ALPINE_VERSIONS+="${PATCH} "
@@ -43,7 +43,7 @@ jobs:
           S6_VERSIONS=""
 
           # Fetch the latest 3 minor versions
-          MINOR_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -oP '^v[0-9]+\.[0-9]+' | sort -Vu | tail -n 3)
+          MINOR_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -oP '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -Vu | tail -n 3)
 
           for VERSION in $MINOR_VERSIONS
           do
