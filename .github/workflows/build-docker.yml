@@ -35,7 +35,7 @@ jobs:
             done
           done
           ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
-          LATEST_VERSION=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
+          LATEST_VERSION=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
           echo "alpine-versions=${sorted_alpine_versions}" >> "$GITHUB_OUTPUT"
           echo "latest-alpine-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
           
