@@ -63,8 +63,8 @@ jobs:
           s6_versions=(${{ fromJson(steps.s6-versions.outputs.s6-versions) }})
           IFS=$'\n' sorted_alpine_versions=($(sort -V <<<"${alpine_versions[*]}"))
           IFS=$'\n' sorted_s6_versions=($(sort -V <<<"${s6_versions[*]}"))
-          echo "latest-alpine-version=${sorted_alpine_versions[-1]}" >> "$GITHUB_OUTPUT"
-          echo "latest-s6-version=${sorted_s6_versions[-1]}" >> "$GITHUB_OUTPUT"
+          echo "latest-alpine-version=$(IFS=','; echo "${sorted_alpine_versions[*]}")" >> "$GITHUB_OUTPUT"
+          echo "latest-s6-version=$(IFS=','; echo "${sorted_s6_versions[*]}")" >> "$GITHUB_OUTPUT"
       - 
         name: Debug
         run: |
