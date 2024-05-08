@@ -79,7 +79,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        alpine-version: ${{ fromJson(needs.setup.outputs.alpine-versions) }}
+        alpine-version: ["3.18", "3.17", "3.16", "3.15"]
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
     steps:
     - 
