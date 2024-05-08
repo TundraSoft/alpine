@@ -13,6 +13,12 @@ on:
     - 
       cron: '0 0 * * 0'
 
+env:
+  PACKAGES: "apk-tools ca-certificates ssl_client"
+  ROOTFS_HASH: "91ceb95b020260832417b01e45ce02c3a250c4527835d1bdf486bf44f80287dc"
+  ROOTFS_VERSION: "v0.7.0"
+  POST_INSTALL: "./post-install.sh"
+
 jobs:
 
   setup:
@@ -64,6 +70,12 @@ jobs:
   test:
     needs: setup
     runs-on: ubuntu-latest
+    env:
+      BUILD_TAR: "/tmp/docker-${{ matrix.alpine-version }}/alpine-rootfs.tar.gz"
+      DOCKER_IMAGE: "ghcr.io/${{ github.repository_owner }}/alpine"
+      DOCKER_ROOT: "/tmp/docker-${{ matrix.alpine-version }}"
+      DOCKER_TAG: ${{ matrix.alpine-version }}
+      MKROOTFS: "/tmp/alpine-make-rootfs-${{ matrix.alpine-version }}"
     strategy:
       fail-fast: true
       matrix:
@@ -73,139 +85,54 @@ jobs:
     - 
       uses: actions/checkout@v4
     
-    - 
-      name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
     -
-      name: Build for Test
-      id: build
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        load: true
-        tags: |
-          local/alpine2:test
-        build-args: | 
-          ALPINE_VERSION=${{ matrix.alpine-version }}
-          S6_OVERLAY_VERSION=${{ matrix.s6-version }}
-    
-    -
-      name: Test
+      name: Fetch MakeRootFS Util
+      id: fetch-makerootfs
       run: |
-        output=$(docker run --rm local/alpine2:test /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
-        if [ "$output" == "OK" ]; then
-          echo "Test Passed"
-        else
-          echo "Test Failed"
-          exit 1
-        fi
-  
-  publish:
-    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    needs: [setup, test]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        alpine-version: ${{ fromJson(needs.setup.outputs.alpine-versions) }}
-        s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
-    steps:
+        wget https://raw.githubusercontent.com/alpinelinux/alpine-make-rootfs/${{ env.ROOTFS_VERSION }}/alpine-make-rootfs -O "${{ env.MKROOTFS }}"
+        echo "${{ env.ROOTFS_HASH }}  ${{ env.MKROOTFS }}" | sha256sum -c -
+        chmod +x ${{ env.MKROOTFS }}
     
     - 
-      uses: actions/checkout@v4
+      name: Build Filesystem
+      id: build-fs
+      run: |
+        mkdir ${{ env.DOCKER_ROOT }}
+        sudo ${{ env.MKROOTFS }} --mirror-uri https://dl-cdn.alpinelinux.org/alpine \
+          --branch "v${{ matrix.alpine-version }}" \
+          --packages "${{ env.PACKAGES }}" \
+          --script-chroot \
+          "${{ env.BUILD_TAR }}" \
+          "${{ env.POST_INSTALL }}"
 
     - 
-      name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    -
-      name: Login to DockerHub
-      uses: docker/login-action@v3 
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    
-    -
-      name: Login to GHCR
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GIT_HUB_TOKEN }}
-
-    -
-      name: Meta Tags
-      id: meta-tags
-      uses: docker/metadata-action@v5
-      with:
-        flavor: |
-          latest=false
-        # list of Docker images to use as base name for tags
-        images: |
-          name=${{ github.repository }},enable=true
-          name=ghcr.io/${{ github.repository }},enable=true
-        # generate Docker tags based on the following events/attributes
-        # type=sha,prefix=,suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-        labels: |
-          org.opencontainers.image.source=${{ github.repositoryUrl }}
-          org.opencontainers.image.revision=${{ github.sha }}
-          org.opencontainers.image.created=${{ github.event.repository.pushed_at }}
-          org.opencontainers.image.authors=${{ github.actor }}
-          org.opencontainers.image.vendor=Tundrasoft
-          org.opencontainers.image.licenses=MIT
-          org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
-          org.opencontainers.image.description=Alpine Linux with S6 Overlay
-          org.opencontainers.image.title=Alpine Linux with S6 Overlay
-        tags: |
-          type=raw,prefix=,value=latest,enable=${{ (matrix.alpine-version == needs.setup.outputs.latest-alpine-version && matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=,value=${{ matrix.alpine-version }},enable=${{ matrix.s6-version == needs.setup.outputs.latest-s6-version && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          #type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ matrix.alpine-version }},enable=${{ (matrix.alpine-version == needs.setup.outputs.latest-alpine-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=,value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+      name: Prepare Dockerfile
+      id: prepare-dockerfile
+      run: |
+        cat <<DOCKERFILE > "${{ env.DOCKER_ROOT }}/Dockerfile"
+        FROM scratch
+        ADD $(basename ${{ env.BUILD_TAR }}) /
+        ADD /rootfs /
+        CMD ["/bin/sh"]
+        DOCKERFILE
 
     - 
-      name: Push
-      uses: docker/build-push-action@v5
+      name: Extract Docker Metadata
+      id: meta
+      uses: docker/metadata-action@507c2f2dc502c992ad446e3d7a5dfbe311567a96
       with:
-        context: .
-        platforms: linux/amd64,linux/arm/v8,linux/arm/v7
-        provenance: false
-        build-args: |
-          ALPINE_VERSION=${{ matrix.alpine-version }}
-          S6_OVERLAY_VERSION=${{ matrix.s6-version }}
-        push: true
-        tags: ${{ steps.meta-tags.outputs.tags }}
-        labels: ${{ steps.meta-tags.outputs.labels }}
+        images:
+          ${{ env.DOCKER_IMAGE }}
+        tags:
+          ${{ env.DOCKER_TAG }}
+
+    - 
+      name: Build Docker Image
+      id: build-image
+      uses: docker/build-push-action@v3
+      with:
+        context: ${{ env.DOCKER_ROOT }}
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
   
-  chore:
-    needs: publish
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    runs-on: ubuntu-latest
-    steps:
-      - 
-        uses: actions/checkout@v4
-        
-      -
-        name: Update repo description
-        uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${{ github.repository }}
-  
-  dispatch:
-    needs: publish
-    # Call only if from main branch
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    strategy:
-      matrix:
-        repo: ['TundraSoft/deno', 'TundraSoft/nginx']
-    runs-on: ubuntu-latest
-    steps:
-      - 
-        name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.GIT_HUB_TOKEN }}
-          repository: ${{ matrix.repo }}
-          event-type: build
