@@ -4,9 +4,10 @@
 # MIT Licensed, see LICENSE for more information.
 #
 
-# Catch errors
-set -ex
-
+S6_OVERLAY_VERSION=${S6_OVERLAY_VERSION}
+PUID=${PUID}
+PGID=${PGID}
+TARGETARCH=${TARGETARCH}
 # Ensure certs are up to date
 update-ca-certificates
 
