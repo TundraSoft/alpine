@@ -27,6 +27,7 @@ tar -C / -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz
 tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz
 rm -rf /tmp/* /var/cache/apk/*
 apk del wget gettext -r
+
 # Add a standard user.
-addgroup -g ${PGID} tundra
-adduser -DH -s /sbin/nologin -u ${PUID} tundra -G tundra
+addgroup -g 1000 tundra
+adduser -DH -s /sbin/nologin -u 1000 tundra -G tundra
