@@ -76,6 +76,7 @@ jobs:
       DOCKER_ROOT: "/tmp/docker-${{ matrix.alpine-version }}"
       DOCKER_TAG: ${{ matrix.alpine-version }}
       MKROOTFS: "/tmp/alpine-make-rootfs-${{ matrix.alpine-version }}"
+      
     strategy:
       fail-fast: true
       matrix:
@@ -87,7 +88,7 @@ jobs:
     
     -
       run: |
-        pwd
+        echo $HOME
     -
       name: Fetch MakeRootFS Util
       id: fetch-makerootfs
@@ -148,7 +149,6 @@ jobs:
           ${{ env.DOCKER_IMAGE }}
         tags:
           ${{ env.DOCKER_TAG }}
-
     - 
       name: Build Docker Image
       id: build-image
