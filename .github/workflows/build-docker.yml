@@ -38,7 +38,7 @@ jobs:
           for VERSION in $ALPINE_MINOR_VERSIONS
           do
             ALPINE_VERSIONS+="${VERSION} "
-            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 3)
+            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 0)
             for PATCH in $PATCH_VERSIONS
             do
               ALPINE_VERSIONS+="${PATCH} "
