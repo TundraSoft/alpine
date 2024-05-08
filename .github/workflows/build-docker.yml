@@ -111,17 +111,29 @@ jobs:
       run: |
         cat <<DOCKERFILE > "${{ env.DOCKER_ROOT }}/Dockerfile"
         FROM scratch
-        ENV S6_OVERLAY_VERSION=${{ matrix.s6-version }} \
-          PUID=1000 \
-          PGID=1000 \ 
-          TZ="UTC" \
-          S6_GLOBAL_PATH="/command:/usr/bin:/bin:/usr/sbin" \
-          S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
-          PATH="/scripts/bin:$PATH" \
-          LANG=C.UTF-8
+        ARG TARGETPLATFORM \
+            TARGETARCH \
+            TARGETVARIANT \
+            S6_OVERLAY_VERSION=${{ matrix.s6-version }} \
+            PUID=1000 \
+            PGID=1000 \ 
+            TZ="UTC" \
+            S6_GLOBAL_PATH="/command:/usr/bin:/bin:/usr/sbin" \
+            S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
+            PATH="/scripts/bin:$PATH" \
+            LANG=C.UTF-8
+        ENV PUID=${PUID} \
+            PGID=${PGID} \ 
+            TZ=${TZ} \
+            S6_GLOBAL_PATH=${S6_GLOBAL_PATH} \
+            S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
+            PATH=${PATH} \
+            LANG=${LANG}
         ADD $(basename ${{ env.BUILD_TAR }}) /
         ADD /rootfs /
-        CMD ["/bin/sh"]
+        COPY s6-setup.sh /
+        RUN /s6-setup.sh && rm -rf /s6-setup.sh
+        ENTRYPOINT [ "/init" ]
         DOCKERFILE
 
     - 
