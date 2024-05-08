@@ -38,7 +38,7 @@ jobs:
           for VERSION in $ALPINE_MINOR_VERSIONS
           do
             ALPINE_VERSIONS+="${VERSION} "
-            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 0)
+            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 3)
             for PATCH in $PATCH_VERSIONS
             do
               ALPINE_VERSIONS+="${PATCH} "
@@ -79,7 +79,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        alpine-version: ["3.18", "3.17", "3.16", "3.15"]
+        alpine-version: ${{ fromJson(needs.setup.outputs.alpine-versions) }}
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
     steps:
     - 
@@ -111,6 +111,14 @@ jobs:
       run: |
         cat <<DOCKERFILE > "${{ env.DOCKER_ROOT }}/Dockerfile"
         FROM scratch
+        ENV S6_OVERLAY_VERSION=${{ matrix.s6-version }} \
+          PUID=1000 \
+          PGID=1000 \ 
+          TZ="UTC" \
+          S6_GLOBAL_PATH="/command:/usr/bin:/bin:/usr/sbin" \
+          S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
+          PATH="/scripts/bin:$PATH" \
+          LANG=C.UTF-8
         ADD $(basename ${{ env.BUILD_TAR }}) /
         ADD /rootfs /
         CMD ["/bin/sh"]
