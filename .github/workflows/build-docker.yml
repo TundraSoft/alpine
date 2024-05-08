@@ -108,7 +108,11 @@ jobs:
           --script-chroot \
           "${{ env.BUILD_TAR }}" \
           "${{ env.POST_INSTALL }}"
-
+    - 
+      name: Copy Files
+      id: copy-files
+      run: |
+        cp -r s6-setup.sh rootfs ${{ env.DOCKER_ROOT }}
     - 
       name: Prepare Dockerfile
       id: prepare-dockerfile
