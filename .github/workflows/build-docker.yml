@@ -70,18 +70,20 @@ jobs:
   test:
     needs: setup
     runs-on: ubuntu-latest
+      
+    strategy:
+      fail-fast: true
+      matrix:
+        alpine-version: ["3.19", "3.18", "3.17", "3.16", "3.15"]
+        s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
+    
     env:
       BUILD_TAR: "/tmp/docker-${{ matrix.alpine-version }}/alpine-rootfs.tar.gz"
       DOCKER_IMAGE: "ghcr.io/${{ github.repository_owner }}/alpine"
       DOCKER_ROOT: "/tmp/docker-${{ matrix.alpine-version }}"
       DOCKER_TAG: ${{ matrix.alpine-version }}
       MKROOTFS: "/tmp/alpine-make-rootfs-${{ matrix.alpine-version }}"
-      
-    strategy:
-      fail-fast: true
-      matrix:
-        alpine-version: ["3.18", "3.17", "3.16", "3.15"]
-        s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
+      PATCH_VERSION: 
     steps:
     - 
       uses: actions/checkout@v4
@@ -108,11 +110,13 @@ jobs:
           --script-chroot \
           "${{ env.BUILD_TAR }}" \
           "${{ env.POST_INSTALL }}"
+    
     - 
       name: Copy Files
       id: copy-files
       run: |
         cp -r s6-setup.sh rootfs ${{ env.DOCKER_ROOT }}
+    
     - 
       name: Prepare Dockerfile
       id: prepare-dockerfile
@@ -153,6 +157,7 @@ jobs:
           ${{ env.DOCKER_IMAGE }}
         tags:
           ${{ env.DOCKER_TAG }}
+
     - 
       name: Build Docker Image
       id: build-image
