@@ -83,14 +83,16 @@ jobs:
       DOCKER_ROOT: "/tmp/docker-${{ matrix.alpine-version }}"
       DOCKER_TAG: ${{ matrix.alpine-version }}
       MKROOTFS: "/tmp/alpine-make-rootfs-${{ matrix.alpine-version }}"
-      PATCH_VERSION: 
+      ALPINE_PATCH_VERSION: 
+        $(curl -s https://cz.alpinelinux.org/alpine/v${{ matrix.alpine-version }}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 1)
+
     steps:
     - 
       uses: actions/checkout@v4
     
     -
       run: |
-        echo $HOME
+        echo ${{ env.ALPINE_PATCH_VERSION }}
     -
       name: Fetch MakeRootFS Util
       id: fetch-makerootfs
