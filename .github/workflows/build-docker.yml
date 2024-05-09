@@ -90,9 +90,9 @@ jobs:
     - 
       uses: actions/checkout@v4
     
-    -
-      run: |
-        echo ${{ env.ALPINE_PATCH_VERSION }}
+    - 
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
     
     -
       name: Fetch MakeRootFS Util
@@ -190,6 +190,7 @@ jobs:
       with:
         context: ${{ env.DOCKER_ROOT }}
         push: false
+        platforms: linux/amd64,linux/arm/v7,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
     
@@ -220,13 +221,9 @@ jobs:
         password: ${{ secrets.GIT_HUB_TOKEN }}
     
     -
-      name: Push
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        # platforms: linux/amd64,linux/arm/v8,linux/arm/v7
-        platforms: linux/amd64,linux/arm/v8,linux/arm/v7,linux/arm/v6
-        provenance: false
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+      name: Push Docker Image
+      run: |
+        repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        docker push ${{ steps.build-image.outputs.imageid }}
+        docker push $repo_name:${{ steps.meta.outputs.tags }}
+        docker push ghcr.io/$repo_name:${{ steps.meta.outputs.tags }}
