@@ -77,6 +77,7 @@ jobs:
       matrix:
         alpine-version: ["3.19", "3.18", "3.17", "3.16", "3.15"]
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
+        platform: ["linux/amd64", "linux/arm/v8", "linux/arm/v7", "linux/arm/v6"]
     
     env:
       LATEST_ALPINE: "3.19"
@@ -189,7 +190,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ${{ env.DOCKER_ROOT }}
-        platforms: linux/amd64,linux/arm/v8,linux/arm/v7
+        platforms: ${{ matrix.platform }}
         push: false
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
