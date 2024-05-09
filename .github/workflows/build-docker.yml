@@ -24,30 +24,31 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      alpine-versions: ${{ steps.alpine-versions.outputs.alpine-versions }}
+      # alpine-versions: ${{ steps.alpine-versions.outputs.alpine-versions }}
+      # latest-alpine-version: ${{ steps.alpine-versions.outputs.latest-alpine-version }}
       s6-versions: ${{ steps.s6-versions.outputs.s6-versions }}
-      latest-alpine-version: ${{ steps.alpine-versions.outputs.latest-alpine-version }}
       latest-s6-version: ${{ steps.s6-versions.outputs.latest-s6-version }}
+
     steps:
-      - 
-        name: Get Alpine Versions
-        id: alpine-versions
-        run: |
-          ALPINE_MINOR_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3)
-          ALPINE_VERSIONS=""
-          for VERSION in $ALPINE_MINOR_VERSIONS
-          do
-            ALPINE_VERSIONS+="${VERSION} "
-            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 0)
-            for PATCH in $PATCH_VERSIONS
-            do
-              ALPINE_VERSIONS+="${PATCH} "
-            done
-          done
-          ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
-          LATEST_VERSION=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
-          echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
-          echo "latest-alpine-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
+      # - 
+      #   name: Get Alpine Versions
+      #   id: alpine-versions
+      #   run: |
+      #     ALPINE_MINOR_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3)
+      #     ALPINE_VERSIONS=""
+      #     for VERSION in $ALPINE_MINOR_VERSIONS
+      #     do
+      #       ALPINE_VERSIONS+="${VERSION} "
+      #       PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 0)
+      #       for PATCH in $PATCH_VERSIONS
+      #       do
+      #         ALPINE_VERSIONS+="${PATCH} "
+      #       done
+      #     done
+      #     ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
+      #     LATEST_VERSION=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
+      #     echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
+      #     echo "latest-alpine-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
           
       - 
         name: Get S6 Versions
@@ -78,13 +79,12 @@ jobs:
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
     
     env:
-      BUILD_TAR: "/tmp/docker-${{ matrix.alpine-version }}/alpine-rootfs.tar.gz"
-      DOCKER_IMAGE: "ghcr.io/${{ github.repository_owner }}/alpine"
-      DOCKER_ROOT: "/tmp/docker-${{ matrix.alpine-version }}"
-      DOCKER_TAG: ${{ matrix.alpine-version }}
-      MKROOTFS: "/tmp/alpine-make-rootfs-${{ matrix.alpine-version }}"
+      LATEST_ALPINE: "3.19"
       ALPINE_PATCH_VERSION: 
         $(curl -s https://cz.alpinelinux.org/alpine/v${{ matrix.alpine-version }}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 1)
+      BUILD_TAR: "/tmp/docker-${{ matrix.alpine-version }}/alpine-rootfs.tar.gz"
+      DOCKER_ROOT: "/tmp/docker-${{ matrix.alpine-version }}"
+      MKROOTFS: "/tmp/alpine-make-rootfs-${{ matrix.alpine-version }}"
 
     steps:
     - 
@@ -93,6 +93,7 @@ jobs:
     -
       run: |
         echo ${{ env.ALPINE_PATCH_VERSION }}
+    
     -
       name: Fetch MakeRootFS Util
       id: fetch-makerootfs
@@ -153,12 +154,30 @@ jobs:
     - 
       name: Extract Docker Metadata
       id: meta
-      uses: docker/metadata-action@507c2f2dc502c992ad446e3d7a5dfbe311567a96
+      uses: docker/metadata-action@v5
       with:
-        images:
-          ${{ env.DOCKER_IMAGE }}
-        tags:
-          ${{ env.DOCKER_TAG }}
+        flavor: |
+          latest=false
+        images: |
+          name=${{ github.repository }},enable=true
+          name=ghcr.io/${{ github.repository }},enable=true
+        labels: |
+          org.opencontainers.image.source=${{ github.repositoryUrl }}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.created=${{ github.event.repository.pushed_at }}
+          org.opencontainers.image.authors=${{ github.actor }}
+          org.opencontainers.image.vendor=Tundrasoft
+          org.opencontainers.image.licenses=MIT
+          org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
+          org.opencontainers.image.description=Alpine Linux with S6 Overlay
+          org.opencontainers.image.title=Alpine Linux with S6 Overlay
+        tags: |
+          type=raw,prefix=,value=latest,enable=${{ (matrix.alpine-version == env.LATEST_ALPINE && matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,prefix=,value=${{ matrix.alpine-version }},enable=${{ matrix.s6-version == needs.setup.outputs.latest-s6-version && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          #type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ matrix.alpine-version }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ matrix.alpine-version }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,prefix=,value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
     - 
       name: Build Docker Image
@@ -169,4 +188,14 @@ jobs:
         push: false
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-  
+    
+    -
+      name: Test Docker Image
+      run: |
+        output=$(docker run --rm ${{ github.repository }}:${{ steps.meta.outputs.tags[0] }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+        if [ "$output" == "OK" ]; then
+          echo "Test Passed"
+        else
+          echo "Test Failed"
+          exit 1
+        fi
