@@ -77,7 +77,6 @@ jobs:
       matrix:
         alpine-version: ["3.19", "3.18", "3.17", "3.16", "3.15"]
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
-        platform: ["linux/amd64", "linux/arm/v8", "linux/arm/v7", "linux/arm/v6"]
     
     env:
       LATEST_ALPINE: "3.19"
@@ -190,13 +189,12 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ${{ env.DOCKER_ROOT }}
-        platforms: ${{ matrix.platform }}
         push: false
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
     
     -
-      name: Test Docker Image
+      name: Test Image
       run: |
         output=$(docker run --rm ${{ steps.build-image.outputs.imageid }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
         if [ "$output" == "OK" ]; then
@@ -222,9 +220,13 @@ jobs:
         password: ${{ secrets.GIT_HUB_TOKEN }}
     
     -
-      name: Push Docker Image
-      run: |
-        repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-        docker push ${{ steps.build-image.outputs.imageid }}
-        docker push $repo_name:${{ steps.meta.outputs.tags }}
-        docker push ghcr.io/$repo_name:${{ steps.meta.outputs.tags }}
+      name: Push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        # platforms: linux/amd64,linux/arm/v8,linux/arm/v7
+        platforms: linux/amd64,linux/arm/v8,linux/arm/v7,linux/arm/v6
+        provenance: false
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
