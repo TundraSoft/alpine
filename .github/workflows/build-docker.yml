@@ -85,7 +85,6 @@ jobs:
       BUILD_TAR: "/tmp/docker-${{ matrix.alpine-version }}/alpine-rootfs.tar.gz"
       DOCKER_ROOT: "/tmp/docker-${{ matrix.alpine-version }}"
       MKROOTFS: "/tmp/alpine-make-rootfs-${{ matrix.alpine-version }}"
-      DOCKER_IMAGE: $(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
 
     steps:
     - 
@@ -94,7 +93,6 @@ jobs:
     -
       run: |
         echo ${{ env.ALPINE_PATCH_VERSION }}
-        echo ${{ env.DOCKER_IMAGE }}
     
     -
       name: Fetch MakeRootFS Util
@@ -188,7 +186,7 @@ jobs:
     - 
       name: Build Docker Image
       id: build-image
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v5
       with:
         context: ${{ env.DOCKER_ROOT }}
         platforms: linux/amd64,linux/arm/v8,linux/arm/v7
