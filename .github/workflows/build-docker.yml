@@ -94,6 +94,7 @@ jobs:
     -
       run: |
         echo ${{ env.ALPINE_PATCH_VERSION }}
+        echo ${{ env.DOCKER_IMAGE }}
     
     -
       name: Fetch MakeRootFS Util
@@ -179,10 +180,10 @@ jobs:
           type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
           type=raw,prefix=,value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
           #non main branch
-          type=raw,prefix=${{ github.ref_name }},value=${{ matrix.alpine-version }},enable=${{ matrix.s6-version == needs.setup.outputs.latest-s6-version && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=semver,prefix=${{ github.ref_name }},pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=semver,prefix=${{ github.ref_name }},pattern={{major}}.{{minor}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=${{ github.ref_name }},value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,prefix=${{ github.ref_name }}-,value=${{ matrix.alpine-version }},enable=${{ matrix.s6-version == needs.setup.outputs.latest-s6-version && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=semver,prefix=${{ github.ref_name }}-,pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=semver,prefix=${{ github.ref_name }}-,pattern={{major}}.{{minor}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,prefix=${{ github.ref_name }}-,value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
     - 
       name: Build Docker Image
@@ -197,7 +198,7 @@ jobs:
     -
       name: Test Docker Image
       run: |
-        output=$(docker run --rm ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.tags[0] }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+        output=$(docker run --rm ${{ steps.build-image.outputs.imageid }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
         if [ "$output" == "OK" ]; then
           echo "Test Passed"
         else
