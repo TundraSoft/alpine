@@ -82,7 +82,7 @@ jobs:
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
     
     env:
-      ALPINE_VERSION: $(curl -s https://cz.alpinelinux.org/alpine/${{ matrix.alpine-branch }}/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')
+      ALPINE_VERSION: 
     # env:
       # LATEST_ALPINE: "3.19"
       # ALPINE_PATCH_VERSION: 
@@ -98,6 +98,11 @@ jobs:
     - 
       name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+    
+    -
+      name: Get the ALPINE VERSION
+      run: |
+        echo "ALPINE_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/${{ matrix.alpine-branch }}/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')" >> $GITHUB_ENV
     
     - 
       name: Extract Docker Metadata
