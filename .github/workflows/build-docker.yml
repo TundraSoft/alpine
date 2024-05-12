@@ -126,7 +126,7 @@ jobs:
           type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }},value=${{ format('{0}-{1}', matrix.alpine-branch, env.ALPINE_VERSION) }},enable=${{ matrix.alpine-branch == 'edge' }}
           type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }},value=${{ format('{0}', matrix.alpine-branch) }},enable=${{ matrix.alpine-branch == 'edge' }}
           #s6 tags
-          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }},value=${{ format('edge-{0}-S6-{2}', env.ALPINE_VERSION, matrix.s6-version) }},enable=${{ matrix.alpine-branch == 'edge' }}
+          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }},value=${{ format('edge-{0}-S6-{1}', env.ALPINE_VERSION, matrix.s6-version) }},enable=${{ matrix.alpine-branch == 'edge' }}
           type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }},value=${{ format('{0}-S6-{1}', env.ALPINE_VERSION, matrix.s6-version) }},enable=${{ matrix.alpine-branch != 'edge' }}
 
     - 
