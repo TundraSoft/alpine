@@ -34,7 +34,7 @@ jobs:
         name: Get Alpine Versions
         id: alpine-versions
         run: |
-          LATEST_VERSION=$(curl -s ${MIRROR}/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
+          LATEST_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
           ALPINE_VERSIONS="edge latest-stable "
           LIMIT=3
           ALPINE_BRANCHES=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V)
