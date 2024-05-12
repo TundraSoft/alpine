@@ -13,12 +13,6 @@ on:
     - 
       cron: '0 0 * * 0'
 
-env:
-  PACKAGES: "apk-tools ca-certificates ssl_client"
-  ROOTFS_HASH: "91ceb95b020260832417b01e45ce02c3a250c4527835d1bdf486bf44f80287dc"
-  ROOTFS_VERSION: "v0.7.0"
-  POST_INSTALL: "./post-install.sh"
-
 jobs:
 
   setup:
@@ -138,7 +132,7 @@ jobs:
       with:
         context: .
         push: false
-        platforms: linux/amd64,linux/arm/v7,linux/arm64
+        platforms: linux/amd64,linux/arm64,linux/arm/v8,linux/arm/v7
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |

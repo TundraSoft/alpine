@@ -25,14 +25,16 @@ WORKDIR /install
 RUN set -eux; \ 
   apk add --no-cache jq; \
   echo '{"amd64":"x86_64", "arm64":"aarch64", "armv8":"aarch64", "armv7":"armv7", "armv6":"armhf"}' > /arch_map.json; \
-  export ARCH=$(jq -r .${TARGETARCH} /arch_map.json); \
-  wget -qO- https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_BRANCH}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz| tar -xz; \
+  export ALPINE_ARCH=$(jq -r .${TARGETARCH} /arch_map.json); \
+  echo '{"amd64":"x86_64", "arm64":"aarch64", "armv8":"aarch64", "armv7":"armhf", "armv6":"armhf"}' > /s6arch_map.json; \
+  export S6_ARCH=$(jq -r .${TARGETARCH} /s6arch_map.json); \
+  wget -qO- https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_BRANCH}/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz| tar -xz; \
   wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-noarch.tar.xz \
         https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-symlinks-noarch.tar.xz \
         https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/syslogd-overlay-noarch.tar.xz \
-        https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-${ARCH}.tar.xz -P /tmp; \
+        https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-${S6_ARCH}.tar.xz -P /tmp; \
   tar -C /install/ -Jxpf /tmp/s6-overlay-noarch.tar.xz; \
-  tar -C /install/ -Jxpf /tmp/s6-overlay-${ARCH}.tar.xz; \
+  tar -C /install/ -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz; \
   tar -C /install/ -Jxpf /tmp/syslogd-overlay-noarch.tar.xz; \
   tar -C /install/ -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz; \
   rmdir -p /home /media/cdrom /media/floppy /media/usb /mnt /srv /usr/local/bin /usr/local/lib /usr/local/share 2>/dev/null || true; \
