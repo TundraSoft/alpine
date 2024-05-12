@@ -49,6 +49,7 @@ jobs:
               fi
             fi
           done
+          ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
           echo "alpine-branches=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
           echo "latest-alpine-branch=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
           
