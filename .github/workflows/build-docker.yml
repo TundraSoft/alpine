@@ -37,7 +37,7 @@ jobs:
           LATEST_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
           ALPINE_BRANCHES="edge latest-stable "
           LIMIT=3
-          ALL_BRANCHES=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V)
+          ALL_BRANCHES=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | reverse)
           for BRANCH in $ALL_BRANCHES
           do
             if curl --output /dev/null --silent --head --fail "https://cz.alpinelinux.org/alpine/v${BRANCH}/releases/";
@@ -122,9 +122,9 @@ jobs:
           org.opencontainers.image.title=Alpine Linux with S6 Overlay
         tags: |
           type=raw,prefix=,value=latest,enable=${{ ( matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) }}
-          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '' || github.ref_name }},value=${{ matrix.alpine-branch }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '' || github.ref_name }},value=${{ env.ALPINE_VERSION }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '' || github.ref_name }},value=${{ env.ALPINE_VERSION }}-S6-${{ matrix.s6-version }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '' || github.ref_name }},value=${{ matrix.alpine-branch }},enable=
+          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '' || github.ref_name }},value=${{ env.ALPINE_VERSION }},enable=
+          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '' || github.ref_name }},value=${{ env.ALPINE_VERSION }}-S6-${{ matrix.s6-version }},enable=
 
     - 
       name: Build Docker Image

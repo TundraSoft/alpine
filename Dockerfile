@@ -52,8 +52,9 @@ COPY --from=src /install /
 
 RUN set -eux; \
   apk upgrade --update --no-cache; \
-  apk add --no-cache tzdata wget libintl gettext shadow curl jq; \
+  apk add --no-cache tzdata wget libintl gettext shadow curl jq apk-tools ca-certificates ssl_client; \
   cp /usr/bin/envsubst /usr/local/bin/envsubst; \
+  update-ca-certificates; \
   rm -rf /tmp/* /var/cache/apk/*; \
   apk del wget gettext -r; \
   addgroup -g ${PUID} tundra; \
