@@ -24,31 +24,33 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      # alpine-versions: ${{ steps.alpine-versions.outputs.alpine-versions }}
-      # latest-alpine-version: ${{ steps.alpine-versions.outputs.latest-alpine-version }}
+      alpine-branches: ${{ steps.alpine-versions.outputs.alpine-versions }}
+      latest-alpine-branch: ${{ steps.alpine-versions.outputs.latest-alpine-version }}
       s6-versions: ${{ steps.s6-versions.outputs.s6-versions }}
       latest-s6-version: ${{ steps.s6-versions.outputs.latest-s6-version }}
 
     steps:
-      # - 
-      #   name: Get Alpine Versions
-      #   id: alpine-versions
-      #   run: |
-      #     ALPINE_MINOR_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3)
-      #     ALPINE_VERSIONS=""
-      #     for VERSION in $ALPINE_MINOR_VERSIONS
-      #     do
-      #       ALPINE_VERSIONS+="${VERSION} "
-      #       PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 0)
-      #       for PATCH in $PATCH_VERSIONS
-      #       do
-      #         ALPINE_VERSIONS+="${PATCH} "
-      #       done
-      #     done
-      #     ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
-      #     LATEST_VERSION=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
-      #     echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
-      #     echo "latest-alpine-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
+      - 
+        name: Get Alpine Versions
+        id: alpine-versions
+        run: |
+          LATEST_VERSION=$(curl -s ${MIRROR}/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
+          ALPINE_VERSIONS="edge latest-stable "
+          LIMIT=3
+          ALPINE_BRANCHES=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V)
+          for BRANCH in $ALPINE_BRANCHES
+          do
+            if curl --output /dev/null --silent --head --fail "https://cz.alpinelinux.org/alpine/v${BRANCH}/releases/";
+            then
+              ALPINE_VERSIONS+="v${BRANCH} "
+              LIMIT=$((LIMIT-1))
+              if [ $LIMIT -eq 0 ]; then
+                break
+              fi
+            fi
+          done
+          echo "alpine-branches=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
+          echo "latest-alpine-branch=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
           
       - 
         name: Get S6 Versions
@@ -68,23 +70,25 @@ jobs:
           echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
           echo "latest-s6-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
       
-  test:
+  build:
     needs: setup
     runs-on: ubuntu-latest
       
     strategy:
       fail-fast: true
       matrix:
-        alpine-version: ["3.19", "3.18", "3.17", "3.16", "3.15"]
+        alpine-branch: ${{ fromJson(needs.setup.outputs.alpine-branches) }}
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
     
     env:
-      LATEST_ALPINE: "3.19"
-      ALPINE_PATCH_VERSION: 
-        $(curl -s https://cz.alpinelinux.org/alpine/v${{ matrix.alpine-version }}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 1)
-      BUILD_TAR: "/tmp/docker-${{ matrix.alpine-version }}/alpine-rootfs.tar.gz"
-      DOCKER_ROOT: "/tmp/docker-${{ matrix.alpine-version }}"
-      MKROOTFS: "/tmp/alpine-make-rootfs-${{ matrix.alpine-version }}"
+      ALPINE_VERSION: $(curl -s https://cz.alpinelinux.org/alpine/${lookup}/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')
+    # env:
+      # LATEST_ALPINE: "3.19"
+      # ALPINE_PATCH_VERSION: 
+      #   $(curl -s https://cz.alpinelinux.org/alpine/v${{ matrix.alpine-version }}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 1)
+      # BUILD_TAR: "/tmp/docker-${{ matrix.alpine-version }}/alpine-rootfs.tar.gz"
+      # DOCKER_ROOT: "/tmp/docker-${{ matrix.alpine-version }}"
+      # MKROOTFS: "/tmp/alpine-make-rootfs-${{ matrix.alpine-version }}"
 
     steps:
     - 
@@ -94,63 +98,6 @@ jobs:
       name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     
-    -
-      name: Fetch MakeRootFS Util
-      id: fetch-makerootfs
-      run: |
-        wget https://raw.githubusercontent.com/alpinelinux/alpine-make-rootfs/${{ env.ROOTFS_VERSION }}/alpine-make-rootfs -O "${{ env.MKROOTFS }}"
-        echo "${{ env.ROOTFS_HASH }}  ${{ env.MKROOTFS }}" | sha256sum -c -
-        chmod +x ${{ env.MKROOTFS }}
-    
-    - 
-      name: Build Filesystem
-      id: build-fs
-      run: |
-        mkdir ${{ env.DOCKER_ROOT }}
-        sudo ${{ env.MKROOTFS }} --mirror-uri https://dl-cdn.alpinelinux.org/alpine \
-          --branch "v${{ matrix.alpine-version }}" \
-          --packages "${{ env.PACKAGES }}" \
-          --script-chroot \
-          "${{ env.BUILD_TAR }}" \
-          "${{ env.POST_INSTALL }}"
-    
-    - 
-      name: Copy Files
-      id: copy-files
-      run: |
-        cp -r s6-setup.sh rootfs ${{ env.DOCKER_ROOT }}
-    
-    - 
-      name: Prepare Dockerfile
-      id: prepare-dockerfile
-      run: |
-        cat <<DOCKERFILE > "${{ env.DOCKER_ROOT }}/Dockerfile"
-        FROM scratch
-        ARG TARGETPLATFORM \
-            TARGETARCH \
-            TARGETVARIANT \
-            S6_OVERLAY_VERSION=${{ matrix.s6-version }} \
-            PUID=1000 \
-            PGID=1000 \ 
-            TZ="UTC" \
-            S6_GLOBAL_PATH="/command:/usr/bin:/bin:/usr/sbin" \
-            S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
-            PATH="/scripts/bin:$PATH" \
-            LANG=C.UTF-8
-        ENV PUID=${PUID} \
-            PGID=${PGID} \ 
-            TZ=${TZ} \
-            S6_GLOBAL_PATH=${S6_GLOBAL_PATH} \
-            S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
-            PATH=${PATH} \
-            LANG=${LANG}
-        ADD $(basename ${{ env.BUILD_TAR }}) /
-        ADD /rootfs /
-        COPY s6-setup.sh /
-        RUN /s6-setup.sh && rm -rf /s6-setup.sh
-        ENTRYPOINT [ "/init" ]
-        DOCKERFILE
-
     - 
       name: Extract Docker Metadata
       id: meta
@@ -188,11 +135,15 @@ jobs:
       id: build-image
       uses: docker/build-push-action@v5
       with:
-        context: ${{ env.DOCKER_ROOT }}
+        context: .
         push: false
         platforms: linux/amd64,linux/arm/v7,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          ALPINE_BRANCH=${{ matrix.alpine-branch }}
+          ALPINE_VERSION=${{ env.ALPINE_VERSION }}
+          S6_VERSION=${{ matrix.s6-version }}
     
     -
       name: Test Image
