@@ -24,8 +24,8 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      alpine-branches: ${{ steps.alpine-versions.outputs.alpine-versions }}
-      latest-alpine-branch: ${{ steps.alpine-versions.outputs.latest-alpine-version }}
+      alpine-branches: ${{ steps.alpine-versions.outputs.alpine-branches }}
+      latest-alpine-branch: ${{ steps.alpine-versions.outputs.latest-alpine-branch }}
       s6-versions: ${{ steps.s6-versions.outputs.s6-versions }}
       latest-s6-version: ${{ steps.s6-versions.outputs.latest-s6-version }}
 
@@ -35,22 +35,22 @@ jobs:
         id: alpine-versions
         run: |
           LATEST_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
-          ALPINE_VERSIONS="edge latest-stable "
+          ALPINE_BRANCHES="edge latest-stable "
           LIMIT=3
           ALPINE_BRANCHES=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V)
           for BRANCH in $ALPINE_BRANCHES
           do
             if curl --output /dev/null --silent --head --fail "https://cz.alpinelinux.org/alpine/v${BRANCH}/releases/";
             then
-              ALPINE_VERSIONS+="v${BRANCH} "
+              ALPINE_BRANCHES+="v${BRANCH} "
               LIMIT=$((LIMIT-1))
               if [ $LIMIT -eq 0 ]; then
                 break
               fi
             fi
           done
-          ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
-          echo "alpine-branches=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
+          ALPINE_BRANCHES=$(echo $ALPINE_BRANCHES | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
+          echo "alpine-branches=${ALPINE_BRANCHES}" >> "$GITHUB_OUTPUT"
           echo "latest-alpine-branch=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
           
       - 
