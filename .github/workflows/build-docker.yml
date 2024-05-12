@@ -120,7 +120,7 @@ jobs:
           org.opencontainers.image.description=Alpine Linux with S6 Overlay
           org.opencontainers.image.title=Alpine Linux with S6 Overlay
         tags: |
-          type=raw,prefix=,value=latest,enable=${{ ( matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && github.ref_name == github.event.repository.default_branch) }}
+          type=raw,prefix=,value=latest,enable=${{ ( matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && matrix.s6-version == needs.setup.outputs.latest-s6-version && github.ref_name == github.event.repository.default_branch) }}
           type=semver,prefix=${{ github.ref_name == github.event.repository.default_branch && '' || format('{0}-', github.ref_name) }},pattern={{major}}.{{minor}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' }}
           type=semver,prefix=${{ github.ref_name == github.event.repository.default_branch && '' || format('{0}-', github.ref_name) }},pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' }}
           type=raw,prefix=${{ github.ref_name == github.event.repository.default_branch && '' || format('{0}-', github.ref_name) }},value=${{ format('{0}-{1}', matrix.alpine-branch, env.ALPINE_VERSION) }},enable=${{ matrix.alpine-branch == 'edge' }}
@@ -150,7 +150,7 @@ jobs:
       name: Test Image
       run: |
         echo "Testing the image ${{ steps.build-image.outputs.imageid }} ${{ steps.meta.outputs.tags }}"
-        echo "${{ fromJSON(steps.meta.outputs.tags)[0] }}"
+        echo "${{ fromJSON(steps.meta.outputs.json).tags[0] }}"
         t=$(docker image ls)
         echo "$t"
         output=$(docker run --rm ${{ steps.meta.outputs.tags[0] }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ env.ALPINE_VERSION }} && echo 'OK' || echo 'KO'")
