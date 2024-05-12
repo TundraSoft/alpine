@@ -44,9 +44,9 @@ jobs:
             then
               ALPINE_BRANCHES+="v${BRANCH} "
               LIMIT=$((LIMIT-1))
-              if [ $LIMIT -eq 0 ]; then
-                break
-              fi
+            fi
+            if [ $LIMIT -le 0 ]; then
+              break
             fi
           done
           ALPINE_BRANCHES=$(echo $ALPINE_BRANCHES | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
@@ -82,7 +82,7 @@ jobs:
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
     
     env:
-      ALPINE_VERSION: $(curl -s https://cz.alpinelinux.org/alpine/${lookup}/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')
+      ALPINE_VERSION: $(curl -s https://cz.alpinelinux.org/alpine/${{ matrix.alpine-branch }}/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')
     # env:
       # LATEST_ALPINE: "3.19"
       # ALPINE_PATCH_VERSION: 
@@ -114,22 +114,17 @@ jobs:
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.created=${{ github.event.repository.pushed_at }}
           org.opencontainers.image.authors=${{ github.actor }}
+          org.opencontainers.image.branch=${{ github.ref }}
           org.opencontainers.image.vendor=Tundrasoft
           org.opencontainers.image.licenses=MIT
           org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
           org.opencontainers.image.description=Alpine Linux with S6 Overlay
           org.opencontainers.image.title=Alpine Linux with S6 Overlay
         tags: |
-          type=raw,prefix=,value=latest,enable=${{ (matrix.alpine-version == env.LATEST_ALPINE && matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=,value=${{ matrix.alpine-version }},enable=${{ matrix.s6-version == needs.setup.outputs.latest-s6-version && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=semver,prefix=,pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=,value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          #non main branch
-          type=raw,prefix=${{ github.ref_name }}-,value=${{ matrix.alpine-version }},enable=${{ matrix.s6-version == needs.setup.outputs.latest-s6-version && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=semver,prefix=${{ github.ref_name }}-,pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=semver,prefix=${{ github.ref_name }}-,pattern={{major}}.{{minor}},value=${{ env.ALPINE_PATCH_VERSION }},enable=${{ (matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=${{ github.ref_name }}-,value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,prefix=,value=latest,enable=${{ ( matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) }}
+          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '' || github.ref_name }},value=${{ matrix.alpine-branch }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '' || github.ref_name }},value=${{ env.ALPINE_VERSION }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,prefix=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '' || github.ref_name }},value=${{ env.ALPINE_VERSION }}-S6-${{ matrix.s6-version }},enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
     - 
       name: Build Docker Image
@@ -172,10 +167,10 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GIT_HUB_TOKEN }}
     
-    -
-      name: Push Docker Image
-      run: |
-        repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-        docker push ${{ steps.build-image.outputs.imageid }}
-        docker push $repo_name:${{ steps.meta.outputs.tags }}
-        docker push ghcr.io/$repo_name:${{ steps.meta.outputs.tags }}
+    # -
+    #   name: Push Docker Image
+    #   run: |
+    #     repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+    #     docker push ${{ steps.build-image.outputs.imageid }}
+    #     docker push $repo_name:${{ steps.meta.outputs.tags }}
+    #     docker push ghcr.io/$repo_name:${{ steps.meta.outputs.tags }}
