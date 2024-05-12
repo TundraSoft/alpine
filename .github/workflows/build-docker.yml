@@ -143,7 +143,7 @@ jobs:
     -
       name: Test Image
       run: |
-        output=$(docker run --rm ${{ steps.build-image.outputs.imageid }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+        output=$(docker run --rm ${{ steps.build-image.outputs.imageid }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ env.ALPINE_VERSION }} && echo 'OK' || echo 'KO'")
         if [ "$output" == "OK" ]; then
           echo "Test Passed"
         else
