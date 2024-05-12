@@ -9,8 +9,7 @@ ARG S6_VERSION \
     ALPINE_VERSION \
     TARGETPLATFORM \
     TARGETARCH \
-    TARGETVARIANT \
-    OSARCH
+    TARGETVARIANT
 
 ENV PUID=1000 \
     PGID=1000 \ 
@@ -23,11 +22,14 @@ ENV PUID=1000 \
 WORKDIR /install
 
 RUN set -eux; \ 
-  apk add --no-cache jq; \
-  echo '{"amd64":"x86_64", "arm64":"aarch64", "armv8":"aarch64", "armv7":"armv7", "armv6":"armhf"}' > /arch_map.json; \
-  export ALPINE_ARCH=$(jq -r .${TARGETARCH} /arch_map.json); \
-  echo '{"amd64":"x86_64", "arm64":"aarch64", "armv8":"aarch64", "armv7":"armhf", "armv6":"armhf"}' > /s6arch_map.json; \
-  export S6_ARCH=$(jq -r .${TARGETARCH} /s6arch_map.json); \
+  echo ${TARGETARCH} ${TARGETVARIANT} ${TARGETPLATFORM}; \
+  case "${TARGETPLATFORM}" in \
+    "linux/amd64"|"linux/x86_64") export ALPINE_ARCH="x86_64"; export S6_ARCH="x86_64" ;; \
+    "linux/arm64"|"linux/arm/v8") export ALPINE_ARCH="aarch64"; export S6_ARCH="aarch64" ;; \
+    "linux/arm/v7") export ALPINE_ARCH="armv7"; export S6_ARCH="armhf" ;; \
+    "linux/arm/v6") export ALPINE_ARCH="armhf"; export S6_ARCH="armhf" ;; \
+    *) echo "Unsupported platform: ${TARGETPLATFORM}" ; exit 1 ;; \
+    esac; \
   wget -qO- https://dl-cdn.alpinelinux.org/alpine/${ALPINE_BRANCH}/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz| tar -xz; \
   wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-noarch.tar.xz \
         https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-symlinks-noarch.tar.xz \
