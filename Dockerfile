@@ -1,5 +1,5 @@
 ARG S6_VERSION=3.1.6.2 \
-  ALPINE_BRANCH=3.19 \
+  ALPINE_BRANCH=v3.19 \
   ALPINE_VERSION=3.19.1
 
 FROM alpine:latest AS src
@@ -28,7 +28,7 @@ RUN set -eux; \
   export ALPINE_ARCH=$(jq -r .${TARGETARCH} /arch_map.json); \
   echo '{"amd64":"x86_64", "arm64":"aarch64", "armv8":"aarch64", "armv7":"armhf", "armv6":"armhf"}' > /s6arch_map.json; \
   export S6_ARCH=$(jq -r .${TARGETARCH} /s6arch_map.json); \
-  wget -qO- https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_BRANCH}/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz| tar -xz; \
+  wget -qO- https://dl-cdn.alpinelinux.org/alpine/${ALPINE_BRANCH}/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz| tar -xz; \
   wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-noarch.tar.xz \
         https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-symlinks-noarch.tar.xz \
         https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/syslogd-overlay-noarch.tar.xz \
