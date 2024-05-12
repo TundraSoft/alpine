@@ -44,6 +44,13 @@ RUN set -eux; \
 
 FROM scratch
 
+ARG S6_VERSION \
+    ALPINE_BRANCH \
+    ALPINE_VERSION \
+    TARGETPLATFORM \
+    TARGETARCH \
+    TARGETVARIANT
+
 ENV PUID=1000 \
     PGID=1000 \ 
     TZ="UTC" \
@@ -63,8 +70,6 @@ RUN set -eux; \
   apk del wget gettext -r; \
   addgroup -g ${PUID} tundra; \
   adduser -DH -s /sbin/nologin -u ${PGID} tundra -G tundra;
-
-USER tundra
 
 ADD /rootfs /
 

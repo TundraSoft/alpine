@@ -77,6 +77,7 @@ jobs:
     
     env:
       ALPINE_VERSION: 
+      TEST_TAG: alpine-s6
     # env:
       # LATEST_ALPINE: "3.19"
       # ALPINE_PATCH_VERSION: 
@@ -135,11 +136,8 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        push: false
-        #,linux/arm/v7
-        platforms: linux/amd64,linux/arm64,linux/arm/v7
-        provenance: false
-        tags: ${{ steps.meta.outputs.tags }}
+        load: true
+        tags: ${{ env.TEST_TAG }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           ALPINE_BRANCH=${{ matrix.alpine-branch }}
@@ -149,9 +147,7 @@ jobs:
     -
       name: Test Image
       run: |
-        IMG_NAME=$(echo "${{ steps.meta.outputs.tags[0] }}" | tr '[:upper:]' '[:lower:]')
-        echo $IMG_NAME
-        output=$(docker run --rm $IMG_NAME /bin/sh -c "cat /etc/alpine-release | grep -q ${{ env.ALPINE_VERSION }} && echo 'OK' || echo 'KO'")
+        output=$(docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ env.ALPINE_VERSION }} && echo 'OK' || echo 'KO'")
         if [ "$output" == "OK" ]; then
           echo "Test Passed"
         else
@@ -174,10 +170,19 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GIT_HUB_TOKEN }}
     
-    # -
-    #   name: Push Docker Image
-    #   run: |
-    #     repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-    #     docker push ${{ steps.build-image.outputs.imageid }}
-    #     docker push $repo_name:${{ steps.meta.outputs.tags }}
-    #     docker push ghcr.io/$repo_name:${{ steps.meta.outputs.tags }}
+    - 
+      name: Build and Push
+      id: build-push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        #,linux/arm/v7
+        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        provenance: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          ALPINE_BRANCH=${{ matrix.alpine-branch }}
+          ALPINE_VERSION=${{ env.ALPINE_VERSION }}
+          S6_VERSION=${{ matrix.s6-version }}
