@@ -37,7 +37,7 @@ jobs:
           LATEST_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
           ALPINE_BRANCHES="edge latest-stable "
           LIMIT=3
-          ALL_BRANCHES=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | reverse)
+          ALL_BRANCHES=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 6)
           for BRANCH in $ALL_BRANCHES
           do
             if curl --output /dev/null --silent --head --fail "https://cz.alpinelinux.org/alpine/v${BRANCH}/releases/";
