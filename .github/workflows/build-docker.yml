@@ -149,7 +149,9 @@ jobs:
     -
       name: Test Image
       run: |
-        echo "Testing the image ${{ steps.build-image.outputs.imageid }} ${{ steps.meta.outputs.tags[0] }}"
+        docker image ls
+        echo "Testing the image ${{ steps.build-image.outputs.imageid }} ${{ steps.meta.outputs.tags }}"
+        echo "${{ fromJSON(steps.meta.outputs.tags)[0] }}"
         output=$(docker run --rm ${{ steps.meta.outputs.tags[0] }} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ env.ALPINE_VERSION }} && echo 'OK' || echo 'KO'")
         if [ "$output" == "OK" ]; then
           echo "Test Passed"
