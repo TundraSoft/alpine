@@ -42,11 +42,10 @@ jobs:
           do
             if curl --output /dev/null --silent --head --fail "https://cz.alpinelinux.org/alpine/v${BRANCH}/releases/";
             then
-              ALPINE_BRANCHES+="v${BRANCH} "
-              LIMIT=$((LIMIT-1))
-            fi
-            if [ $LIMIT -le 0 ]; then
-              break
+              if [ $LIMIT -gt 0 ]; then
+                ALPINE_BRANCHES+="v${BRANCH} "
+                LIMIT=$((LIMIT-1))
+              fi
             fi
           done
           ALPINE_BRANCHES=$(echo $ALPINE_BRANCHES | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
