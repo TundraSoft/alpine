@@ -22,7 +22,6 @@ ENV PUID=1000 \
 WORKDIR /install
 
 RUN set -eux; \ 
-  echo ${TARGETARCH} ${TARGETVARIANT} ${TARGETPLATFORM}; \
   case "${TARGETPLATFORM}" in \
     "linux/amd64"|"linux/x86_64") export ALPINE_ARCH="x86_64"; export S6_ARCH="x86_64" ;; \
     "linux/arm64"|"linux/arm/v8") export ALPINE_ARCH="aarch64"; export S6_ARCH="aarch64" ;; \
