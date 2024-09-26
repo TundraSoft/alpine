@@ -43,6 +43,8 @@ RUN set -eux; \
 
 FROM scratch
 
+LABEL maintainer="Abhinav A V <36784+abhai2k@users.noreply.github.com>"
+
 ARG S6_VERSION \
     ALPINE_BRANCH \
     ALPINE_VERSION \
