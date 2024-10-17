@@ -57,7 +57,7 @@ ENV PUID=1000 \
     TZ="UTC" \
     S6_GLOBAL_PATH="/command:/usr/bin:/bin:/usr/sbin" \
     S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
-    PATH="/scripts/bin:$PATH" \
+    PATH="/scripts:$PATH" \
     LANG=C.UTF-8
 
 COPY --from=src /install /
