@@ -14,7 +14,7 @@ fi
 
 # chown tundra:tundra -R /app
 # setgroup /app
-setgroup /scripts/bin
+setgroup /scripts
 
 # ensure all scripts inside /scripts/bin are executable
-chmod +x /scripts/bin/*
+chmod +x /scripts/*
