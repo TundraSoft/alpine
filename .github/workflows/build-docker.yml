@@ -7,6 +7,8 @@ on:
       - .gitignore
       - .github/ISSUE_TEMPLATE/*
       - .github/PULL_REQUEST_TEMPLATE*
+      - ./README.md
+      - ./LICENSE
   pull_request:
     branches: [ main ]
   schedule:
@@ -18,30 +20,34 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      alpine-versions: ${{ steps.alpine-versions.outputs.alpine-versions }}
+      alpine-branches: ${{ steps.alpine-versions.outputs.alpine-branches }}
+      latest-alpine-branch: ${{ steps.alpine-versions.outputs.latest-alpine-branch }}
       s6-versions: ${{ steps.s6-versions.outputs.s6-versions }}
-      latest-alpine-version: ${{ steps.alpine-versions.outputs.latest-alpine-version }}
       latest-s6-version: ${{ steps.s6-versions.outputs.latest-s6-version }}
+
     steps:
       - 
         name: Get Alpine Versions
         id: alpine-versions
         run: |
-          ALPINE_MINOR_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 3)
-          ALPINE_VERSIONS=""
-          for VERSION in $ALPINE_MINOR_VERSIONS
+          LATEST_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
+          ALPINE_BRANCHES="edge "
+          LIMIT=3
+          ALL_BRANCHES=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 6 | tac)
+          for BRANCH in $ALL_BRANCHES
           do
-            ALPINE_VERSIONS+="${VERSION} "
-            PATCH_VERSIONS=$(curl -s https://cz.alpinelinux.org/alpine/v${VERSION}/releases/x86_64/ | grep -oP '(?<=alpine-standard-)[0-9]+\.[0-9]+\.[0-9]+(?=-x86_64.iso)' | sort -V | uniq | tail -n 3)
-            for PATCH in $PATCH_VERSIONS
-            do
-              ALPINE_VERSIONS+="${PATCH} "
-            done
+            if curl --output /dev/null --silent --head --fail "https://cz.alpinelinux.org/alpine/v${BRANCH}/releases/";
+            then
+              ALPINE_BRANCHES+="v${BRANCH} "
+              LIMIT=$((LIMIT-1))
+            fi
+            if [ $LIMIT -le 0 ]; then
+              break
+            fi
           done
-          ALPINE_VERSIONS=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
-          LATEST_VERSION=$(echo $ALPINE_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
-          echo "alpine-versions=${ALPINE_VERSIONS}" >> "$GITHUB_OUTPUT"
-          echo "latest-alpine-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
+          ALPINE_BRANCHES=$(echo $ALPINE_BRANCHES | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
+          echo "alpine-branches=${ALPINE_BRANCHES}" >> "$GITHUB_OUTPUT"
+          echo "latest-alpine-branch=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
           
       - 
         name: Get S6 Versions
@@ -61,14 +67,20 @@ jobs:
           echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
           echo "latest-s6-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
       
-  test:
+  build:
     needs: setup
     runs-on: ubuntu-latest
+      
     strategy:
       fail-fast: true
       matrix:
-        alpine-version: ${{ fromJson(needs.setup.outputs.alpine-versions) }}
+        alpine-branch: ${{ fromJson(needs.setup.outputs.alpine-branches) }}
         s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
+    
+    env:
+      ALPINE_VERSION: 
+      TEST_TAG: alpine-s6
+    
     steps:
     - 
       uses: actions/checkout@v4
@@ -78,50 +90,69 @@ jobs:
       uses: docker/setup-buildx-action@v3
     
     -
-      name: Build for Test
-      id: build
+      name: Get the ALPINE VERSION
+      run: |
+        echo "ALPINE_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/${{ matrix.alpine-branch }}/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')" >> $GITHUB_ENV
+    
+    - 
+      name: Extract Docker Metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        flavor: |
+          latest=false
+        images: |
+          name=${{ github.repository }},enable=true
+          name=ghcr.io/${{ github.repository }},enable=true
+        labels: |
+          org.opencontainers.image.source=${{ github.repositoryUrl }}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.created=${{ github.event.repository.pushed_at }}
+          org.opencontainers.image.authors=${{ github.actor }}
+          org.opencontainers.image.branch=${{ github.ref_name }}
+          org.opencontainers.image.vendor=Tundrasoft
+          org.opencontainers.image.licenses=MIT
+          org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
+          org.opencontainers.image.description=Alpine Linux with S6 Overlay
+          org.opencontainers.image.title=Alpine Linux with S6 Overlay
+        tags: |
+          type=raw,prefix=,value=latest,enable=${{ ( matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && matrix.s6-version == needs.setup.outputs.latest-s6-version && github.ref_name == github.event.repository.default_branch) }}
+          type=semver,prefix=${{ github.ref_name == github.event.repository.default_branch && '' || format('{0}-', github.ref_name) }},pattern={{major}}.{{minor}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && matrix.s6-version == needs.setup.outputs.latest-s6-version }}
+          type=semver,prefix=${{ github.ref_name == github.event.repository.default_branch && '' || format('{0}-', github.ref_name) }},pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && matrix.s6-version == needs.setup.outputs.latest-s6-version }}
+          type=raw,prefix=${{ github.ref_name == github.event.repository.default_branch && '' || format('{0}-', github.ref_name) }},value=${{ format('{0}-{1}', matrix.alpine-branch, env.ALPINE_VERSION) }},enable=${{ matrix.alpine-branch == 'edge' && matrix.s6-version == needs.setup.outputs.latest-s6-version }}
+          type=raw,prefix=${{ github.ref_name == github.event.repository.default_branch && '' || format('{0}-', github.ref_name) }},value=${{ format('{0}', matrix.alpine-branch) }},enable=${{ matrix.alpine-branch == 'edge' && matrix.s6-version == needs.setup.outputs.latest-s6-version }}
+          #s6 tags
+          type=raw,prefix=${{ github.ref_name == github.event.repository.default_branch && '' || format('{0}-', github.ref_name) }},value=${{ format('edge-{0}-S6-{1}', env.ALPINE_VERSION, matrix.s6-version) }},enable=${{ matrix.alpine-branch == 'edge' }}
+          type=raw,prefix=${{ github.ref_name == github.event.repository.default_branch && '' || format('{0}-', github.ref_name) }},value=${{ format('{0}-S6-{1}', env.ALPINE_VERSION, matrix.s6-version) }},enable=${{ matrix.alpine-branch != 'edge' }}
+
+    - 
+      name: Build Test Image
+      id: build-image
       uses: docker/build-push-action@v5
       with:
         context: .
         load: true
-        tags: |
-          local/alpine2:test
-        build-args: | 
-          ALPINE_VERSION=${{ matrix.alpine-version }}
-          S6_OVERLAY_VERSION=${{ matrix.s6-version }}
+        tags: ${{ env.TEST_TAG }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          ALPINE_BRANCH=${{ matrix.alpine-branch }}
+          ALPINE_VERSION=${{ env.ALPINE_VERSION }}
+          S6_VERSION=${{ matrix.s6-version }}
     
     -
-      name: Test
+      name: Test Image
       run: |
-        output=$(docker run --rm local/alpine2:test /bin/sh -c "cat /etc/alpine-release | grep -q ${{ matrix.alpine-version }} && echo 'OK' || echo 'KO'")
+        output=$(docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ env.ALPINE_VERSION }} && echo 'OK' || echo 'KO'")
         if [ "$output" == "OK" ]; then
           echo "Test Passed"
         else
           echo "Test Failed"
           exit 1
         fi
-  
-  publish:
-    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    needs: [setup, test]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        alpine-version: ${{ fromJson(needs.setup.outputs.alpine-versions) }}
-        s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
-    steps:
     
-    - 
-      uses: actions/checkout@v4
-
-    - 
-      name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
     -
       name: Login to DockerHub
-      uses: docker/login-action@v3 
+      uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
@@ -133,53 +164,27 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GIT_HUB_TOKEN }}
-
-    -
-      name: Meta Tags
-      id: meta-tags
-      uses: docker/metadata-action@v5
-      with:
-        flavor: |
-          latest=false
-        # list of Docker images to use as base name for tags
-        images: |
-          name=${{ github.repository }},enable=true
-          name=ghcr.io/${{ github.repository }},enable=true
-        # generate Docker tags based on the following events/attributes
-        # type=sha,prefix=,suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-        labels: |
-          org.opencontainers.image.source=${{ github.repositoryUrl }}
-          org.opencontainers.image.revision=${{ github.sha }}
-          org.opencontainers.image.created=${{ github.event.repository.pushed_at }}
-          org.opencontainers.image.authors=${{ github.actor }}
-          org.opencontainers.image.vendor=Tundrasoft
-          org.opencontainers.image.licenses=MIT
-          org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
-          org.opencontainers.image.description=Alpine Linux with S6 Overlay
-          org.opencontainers.image.title=Alpine Linux with S6 Overlay
-        tags: |
-          type=raw,prefix=,value=latest,enable=${{ (matrix.alpine-version == needs.setup.outputs.latest-alpine-version && matrix.s6-version == needs.setup.outputs.latest-s6-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=,value=${{ matrix.alpine-version }},enable=${{ matrix.s6-version == needs.setup.outputs.latest-s6-version && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          #type=semver,prefix=,pattern={{major}}.{{minor}},value=${{ matrix.alpine-version }},enable=${{ (matrix.alpine-version == needs.setup.outputs.latest-alpine-version) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-          type=raw,prefix=,value=alpine-${{ matrix.alpine-version }}-S6-${{ matrix.s6-version }},suffix=,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-
+    
     - 
-      name: Push
-      uses: docker/build-push-action@v5
+      name: Build and Push
+      id: build-push
+      uses: docker/build-push-action@v6
       with:
         context: .
-        platforms: linux/amd64,linux/arm/v8,linux/arm/v7
-        provenance: false
-        build-args: |
-          ALPINE_VERSION=${{ matrix.alpine-version }}
-          S6_OVERLAY_VERSION=${{ matrix.s6-version }}
         push: true
-        tags: ${{ steps.meta-tags.outputs.tags }}
-        labels: ${{ steps.meta-tags.outputs.labels }}
+        #,linux/arm/v7
+        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        provenance: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          ALPINE_BRANCH=${{ matrix.alpine-branch }}
+          ALPINE_VERSION=${{ env.ALPINE_VERSION }}
+          S6_VERSION=${{ matrix.s6-version }}
   
   chore:
-    needs: publish
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    needs: build
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - 
@@ -194,9 +199,9 @@ jobs:
           repository: ${{ github.repository }}
   
   dispatch:
-    needs: publish
+    needs: build
     # Call only if from main branch
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    if: github.ref_name == github.event.repository.default_branch
     strategy:
       matrix:
         repo: ['TundraSoft/deno', 'TundraSoft/nginx']

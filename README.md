@@ -10,10 +10,12 @@
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
 
-This is a base docker image used throughout all docker builds. This image 
-uses s6-overlay to help with initialization and management of services, crond 
-for managing scheduled jobs and envsubst to handle environment variable 
-substitution.
+This is a base docker image of alpine with few utilities pre-installed to make docker builds easy. 
+It contains:
+- s6 overlay for service management
+- cron service
+- envsubst
+- Base user & group set as tundra
 
 ## Usage
 
@@ -154,3 +156,14 @@ displaying the correct time.
 ### envsubst
 
 Added envsubst to help in applying environment variables in config files. 
+
+### cron
+
+To add cron jobs, simply create a file in /crons/ and it will be included. Example file:
+
+`dummy`
+```sh
+*/30 * * * * task-command >> /var/log/task.log 2>&1
+```
+
+The above file, creats a cron entry which runs every `30` minutes calling the command `task-command` and saving output to `/var/log/task.log`
