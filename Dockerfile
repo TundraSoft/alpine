@@ -76,8 +76,8 @@ RUN set -eux; \
   update-ca-certificates; \
   rm -rf /tmp/* /var/cache/apk/*; \
   apk del wget gettext -r; \
-  addgroup -g ${PUID} tundra; \
-  adduser -DH -s /sbin/nologin -u ${PGID} tundra -G tundra;
+  addgroup -g ${PGID} tundra; \
+  adduser -DH -s /sbin/nologin -u ${PUID} tundra -G tundra;
 
 COPY /rootfs /
 
