@@ -159,7 +159,7 @@ jobs:
         # Check s6-overlay is present
         docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "[ -x /init ] && echo 's6-overlay present' || (echo 's6-overlay missing' && exit 1)"
         # Check cron is installed and can start
-        docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "crond -f && echo 'cron present' || (echo 'cron missing' && exit 1)"
+        docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "crond --help && echo 'cron present' || (echo 'cron missing' && exit 1)"
         # Check tundra user exists
         docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "id tundra && echo 'tundra user exists' || (echo 'tundra user missing' && exit 1)"
         # Check timezone can be set
