@@ -71,7 +71,6 @@ ENV PUID=1000 \
 COPY --from=src /install /
 
 RUN set -eux; \
-  apk upgrade --update --no-cache; \
   apk add --no-cache apk-tools ca-certificates curl gettext jq libintl shadow ssl_client tzdata wget; \
   cp /usr/bin/envsubst /usr/local/bin/envsubst; \
   update-ca-certificates; \
