@@ -178,7 +178,7 @@ To add cron jobs, simply create a file in /crons/ and it will be included. Examp
 */30 * * * * task-command >> /var/log/task.log 2>&1
 ```
 
-The above file, creats a cron entry which runs every `30` minutes calling the command `task-command` and saving output to `/var/log/task.log`
+The above file, creates a cron entry which runs every `30` minutes calling the command `task-command` and saving output to `/var/log/task.log`
 
 ### Security Notice for Cron Jobs
 
