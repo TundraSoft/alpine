@@ -1,5 +1,17 @@
 # TundraSoft - Alpine
 
+<!-- TAGS-START -->
+## Tags
+
+| Tag | Versions / Date(s) |
+|------|--------------------|
+| [latest](https://hub.docker.com/r/tundrasoft/alpine/tags?name=latest) | Latest stable release |
+| [edge](https://hub.docker.com/r/tundrasoft/alpine/tags?name=edge) | 2025-07-04, 2025-06-30 |
+| [3.19](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19) | [3.19.1](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19.1), [3.19.0](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19.0) |
+| [3.18](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18) | [3.18.6](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18.6), [3.18.5](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18.5), [3.18.4](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18.4) |
+
+<!-- TAGS-END -->
+
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/build-docker.yml?event=push&logo=github)](https://github.com/TundraSoft/alpine/actions/workflows/build-docker.yml?logo=github)
 [![GitHub issues](https://img.shields.io/github/issues-raw/tundrasoft/alpine.svg?logo=github)](https://github.com/tundrasoft/alpine/issues)
 [![GitHub PRs](https://img.shields.io/github/issues-pr-raw/tundrasoft/alpine.svg?logo=github)](https://github.com/tundrasoft/alpine/pulls) 
@@ -167,3 +179,19 @@ To add cron jobs, simply create a file in /crons/ and it will be included. Examp
 ```
 
 The above file, creats a cron entry which runs every `30` minutes calling the command `task-command` and saving output to `/var/log/task.log`
+
+### Security Notice for Cron Jobs
+
+**Warning:** If you mount arbitrary files or directories into `/crons`, ensure that only trusted users can write to these files. Malicious cron jobs could be executed with the container's privileges. Avoid mounting world-writable directories or files from untrusted sources.
+
+Example (secure):
+```sh
+docker run -v /secure/path/to/crons:/crons ...
+```
+
+Example (insecure, avoid):
+```sh
+docker run -v /tmp:/crons ... # /tmp is world-writable!
+```
+
+Only mount cron job files from secure, trusted locations.

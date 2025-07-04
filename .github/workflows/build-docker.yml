@@ -9,6 +9,8 @@ on:
       - .github/PULL_REQUEST_TEMPLATE*
       - ./README.md
       - ./LICENSE
+    # Ignore CI if commit message contains '[skip ci]' (e.g., from update-readme chore)
+    # This is a GitHub Actions convention, not a YAML field, so we use a job-level if below
   pull_request:
     branches: [ main ]
   schedule:
@@ -18,6 +20,8 @@ on:
 jobs:
 
   setup:
+    if: |
+      !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
     outputs:
       alpine-branches: ${{ steps.alpine-versions.outputs.alpine-branches }}
@@ -78,7 +82,7 @@ jobs:
         # s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
     
     env:
-      ALPINE_VERSION: 
+      ALPINE_VERSION: ''
       TEST_TAG: alpine-s6
     
     steps:
@@ -144,13 +148,25 @@ jobs:
     -
       name: Test Image
       run: |
+        # Check Alpine version
         output=$(docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ env.ALPINE_VERSION }} && echo 'OK' || echo 'KO'")
         if [ "$output" == "OK" ]; then
-          echo "Test Passed"
+          echo "Alpine version test passed"
         else
-          echo "Test Failed"
+          echo "Alpine version test failed"
           exit 1
         fi
+        # Check s6-overlay is present
+        docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "[ -x /init ] && echo 's6-overlay present' || (echo 's6-overlay missing' && exit 1)"
+        # Check cron is installed and can start
+        docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "crond -V && echo 'cron present' || (echo 'cron missing' && exit 1)"
+        # Check tundra user exists
+        docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "id tundra && echo 'tundra user exists' || (echo 'tundra user missing' && exit 1)"
+        # Check timezone can be set
+        docker run --rm -e TZ=Asia/Kolkata ${{ env.TEST_TAG}} /bin/sh -c "cat /etc/timezone | grep -q 'Asia/Kolkata' && echo 'Timezone OK' || (echo 'Timezone FAIL' && exit 1)"
+        # Check /crons is writable by tundra
+        docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "touch /crons/testfile && echo 'crons writable' || (echo 'crons not writable' && exit 1)"
+        echo "All tests passed."
     
     -
       name: Login to DockerHub
@@ -184,14 +200,31 @@ jobs:
           ALPINE_VERSION=${{ env.ALPINE_VERSION }}
           S6_VERSION=${{ needs.setup.outputs.latest-s6-version }}
   
-  chore:
+  update-readme:
     needs: build
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update README tags section
+        run: |
+          pip install requests
+          python3 .github/update_readme_tags.py
+
+      - name: Commit README update
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add README.md
+          git commit -m "chore: update tags section in README.md [skip ci]" || echo "No changes"
+          git push
+
+  chore:
+    needs: update-readme
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - 
         uses: actions/checkout@v4
-        
       -
         name: Update repo description
         uses: peter-evans/dockerhub-description@v4
