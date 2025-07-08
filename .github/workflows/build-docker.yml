@@ -246,27 +246,27 @@ jobs:
             fi
           done
       
-      - name: Generate Docker Hub README
-        run: |
-          echo "Generating DOCKER.md for Docker Hub..."
-          python .github/scripts/generate_docker_readme.py \
-            README.md \
-            DOCKER.md \
-            '${{ needs.setup.outputs.alpine-branches }}' \
-            '${{ github.repository }}' \
-            '${{ github.repository }}' \
-            '${{ needs.setup.outputs.latest-s6-version }}' \
-            'description:DESCRIPTION-START,DESCRIPTION-END;env-vars:ENV-VARS-START,ENV-VARS-END;build-args:BUILD-ARGS-START,BUILD-ARGS-END'
+      # - name: Generate Docker Hub README
+      #   run: |
+      #     echo "Generating DOCKER.md for Docker Hub..."
+      #     python .github/scripts/generate_docker_readme.py \
+      #       README.md \
+      #       DOCKER.md \
+      #       '${{ needs.setup.outputs.alpine-branches }}' \
+      #       '${{ github.repository }}' \
+      #       '${{ github.repository }}' \
+      #       '${{ needs.setup.outputs.latest-s6-version }}' \
+      #       'description:DESCRIPTION-START,DESCRIPTION-END;env-vars:ENV-VARS-START,ENV-VARS-END;build-args:BUILD-ARGS-START,BUILD-ARGS-END'
       
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add README.md DOCKER.md
+          git add README.md
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Update README.md and DOCKER.md with latest tags [skip ci]"
+            git commit -m "Update README.md with latest tags [skip ci]"
             git push origin ${{ github.ref_name }}
           fi
   
@@ -285,5 +285,5 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: ${{ github.repository }}
-          readme-filepath: ./DOCKER.md
+          # readme-filepath: ./DOCKER.md
 
