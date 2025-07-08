@@ -1,95 +1,89 @@
-# 🏔️ TundraSoft Alpine Base Image
+# Alpine Docker Image
 
 A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
 
-## 🚀 Quick Start
+[![Docker Pulls](https://img.shields.io/docker/pulls/TundraSoft/alpine.svg?logo=docker)](https://hub.docker.com/r/TundraSoft/alpine)
+[![GitHub](https://img.shields.io/github/license/TundraSoft/alpine.svg)](https://github.com/TundraSoft/alpine)
+
+## 📋 Quick Links
+
+- � [Documentation](https://github.com/TundraSoft/alpine)
+- � [Issues](https://github.com/TundraSoft/alpine/issues)
+- � [Security](https://github.com/TundraSoft/alpine/security)
+
+## � Quick Start
 
 ```bash
 # Pull and run
-docker pull tundrasoft/alpine:latest
-docker run -d --name my-app tundrasoft/alpine:latest
-
-# With custom timezone and user
-docker run -d \
-  -e TZ=America/New_York \
-  -e PUID=1000 \
-  -e PGID=1000 \
-  --name my-app \
-  tundrasoft/alpine:latest
+docker pull TundraSoft/alpine:latest
+docker run -d --name my-app TundraSoft/alpine:latest
 ```
 
 ## 🏷️ Available Tags
 
-- `latest` - Latest stable Alpine version
-- `3.21.x` - Specific Alpine versions
-- `edge` - Alpine edge (development)
+- [`latest`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=latest) - Latest stable release (3.22.0)
 
-## ✨ Features
+### Stable Versions
 
-- 🏔️ **Alpine Linux** - Minimal, security-focused
-- 🔧 **S6 Overlay** - Advanced init system and process supervisor
-- ⏰ **Cron Support** - Built-in cron daemon with dynamic job loading
-- 👤 **User Management** - Non-root `tundra` user (UID/GID 1000)
-- 🌍 **Timezone Support** - Easy timezone configuration
-- 🔄 **Environment Substitution** - Built-in envsubst utility
-- 🔒 **Security Focused** - Regular security scans and updates
+- [`3.22.0`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.22.0) - Alpine 3.22.0
+- [`3.22`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.22) - Latest Alpine 3.22.x
+- [`3.21.3`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.21.3) - Alpine 3.21.3
+- [`3.21`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.21) - Latest Alpine 3.21.x
+- [`3.20.6`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.20.6) - Alpine 3.20.6
+- [`3.20`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.20) - Latest Alpine 3.20.x
+
+### Development Versions
+
+- [`edge`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=edge) - Alpine edge (development branch)
 
 ## 📖 Usage
 
 ### Environment Variables
 
-- `TZ` - Set timezone (default: UTC)
-- `PUID` - User ID for tundra user (default: 1000)
-- `PGID` - Group ID for tundra group (default: 1000)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PUID` | User ID for the `tundra` user | `1000` |
+| `PGID` | Group ID for the `tundra` group | `1000` |
+| `TZ` | Timezone (e.g., `Asia/Kolkata`, `America/New_York`) | `UTC` |
 
-### Volumes
+### Build Arguments
 
-- `/crons` - Place cron job files here (auto-loaded)
-- `/app` - Default working directory
-
-### Cron Jobs
-
-Place cron files in `/crons` directory:
-
-```bash
-# Example: /crons/backup
-0 2 * * * /usr/local/bin/backup.sh
-```
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `ALPINE_VERSION` | Alpine Linux version | `3.22.0` |
+| `S6_VERSION` | S6 Overlay version | `3.1.6.2` |
 
 ## 🔧 Building Custom Images
 
 ```dockerfile
-FROM tundrasoft/alpine:latest
+FROM TundraSoft/alpine:latest
 
-# Your application setup
+# Install additional packages
+RUN apk add --no-cache your-package
+
+# Copy your application
 COPY app/ /app/
-COPY crons/ /crons/
 
 # Set working directory
 WORKDIR /app
 
-# Your CMD or ENTRYPOINT
+# Your application startup
 CMD ["/app/start.sh"]
 ```
 
-## 🔒 Security
+## 🤝 Support & Contributing
 
-- Multi-layered security scanning (Trivy, CodeQL, Semgrep)
-- Daily vulnerability monitoring
-- Secret detection with GitLeaks
-- Regular Alpine and S6 overlay updates
+- 📖 **Documentation**: [GitHub Repository](https://github.com/TundraSoft/alpine)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/TundraSoft/alpine/issues)
+- 🔒 **Security Issues**: [Private Vulnerability Reporting](https://github.com/TundraSoft/alpine/security)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/TundraSoft/alpine/discussions)
 
-## 📚 Components
+---
 
-- **Alpine Linux** - Latest stable or edge versions
-- **S6 Overlay** - Latest stable version
-- **Cron** - Full cron daemon with environment variable support
-- **Timezone Data** - Complete timezone database
+<div align="center">
 
-## 🤝 Support
+**Built with ❤️ by [TundraSoft](https://github.com/TundraSoft)**
 
-- [Documentation](https://github.com/TundraSoft/alpine)
-- [Issues](https://github.com/TundraSoft/alpine/issues)
-- [Security](https://github.com/TundraSoft/alpine/security)
+[View on GitHub](https://github.com/TundraSoft/alpine) • [Docker Hub](https://hub.docker.com/r/TundraSoft/alpine) • [Report Issue](https://github.com/TundraSoft/alpine/issues)
 
-Built with ❤️ by [TundraSoft](https://github.com/TundraSoft)
+</div>
