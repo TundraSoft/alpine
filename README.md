@@ -1,6 +1,8 @@
 # 🏔️ TundraSoft Alpine Base Image
 
+<!-- DESCRIPTION-START -->
 A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
+<!-- DESCRIPTION-END -->
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/build-docker.yml?event=push&logo=github&label=build)](https://github.com/TundraSoft/alpine/actions/workflows/build-docker.yml)
 [![Security Scan](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/security-scan.yml?event=schedule&logo=shield&label=security)](https://github.com/TundraSoft/alpine/actions/workflows/security-scan.yml)
@@ -114,11 +116,13 @@ FROM ghcr.io/tundrasoft/alpine:3.22
 
 ### Environment Variables
 
+<!-- ENV-VARS-START -->
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PUID` | User ID for the `tundra` user | `1000` |
 | `PGID` | Group ID for the `tundra` group | `1000` |
 | `TZ` | Timezone (e.g., `Asia/Kolkata`, `America/New_York`) | `UTC` |
+<!-- ENV-VARS-END -->
 
 ### Volumes
 
@@ -242,10 +246,12 @@ docker build \
 
 ### ⚙️ Build Arguments
 
+<!-- BUILD-ARGS-START -->
 | Argument | Description | Example |
 |----------|-------------|---------|
 | `ALPINE_VERSION` | Alpine Linux version | `3.22.0` |
 | `S6_VERSION` | S6 Overlay version | `3.1.6.2` |
+<!-- BUILD-ARGS-END -->
 
 ---
 
