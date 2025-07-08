@@ -19,7 +19,25 @@ on:
 
 jobs:
 
+  # Secret Scanning with GitLeaks (runs early to catch secrets before build)
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for GitLeaks to scan all commits
+          fetch-depth: 0
+
+      - name: Run GitLeaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_KEY}}
+
   setup:
+    needs: [secret-scan]
     if: |
       !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
@@ -120,14 +138,15 @@ jobs:
           org.opencontainers.image.description=Alpine Linux with S6 Overlay
           org.opencontainers.image.title=Alpine Linux with S6 Overlay
         tags: |
-          type=raw,prefix=,value=latest,enable=${{ ( matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && github.ref_name == github.event.repository.default_branch) }}
-          # Version
+          type=raw,prefix=,value=latest,enable=${{ ( matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && matrix.alpine-branch != 'edge' && github.ref_name == github.event.repository.default_branch) }}
+          # Version tags for non-edge releases
           type=semver,pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name == github.event.repository.default_branch }}
           type=semver,pattern={{major}}.{{minor}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name == github.event.repository.default_branch }}
           type=semver,pattern={{major}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && github.ref_name == github.event.repository.default_branch }}
+          # Edge version tags
           type=raw,value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch == 'edge' && github.ref_name == github.event.repository.default_branch }}
           type=raw,value=edge,enable=${{ matrix.alpine-branch == 'edge' && github.ref_name == github.event.repository.default_branch }}
-          # Version with branch
+          # Branch-prefixed tags for non-default branches
           type=semver,prefix=${{ format('{0}-', github.ref_name)}},pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name != github.event.repository.default_branch }}
           type=raw,prefix=${{ format('{0}-', github.ref_name)}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch == 'edge' && github.ref_name != github.event.repository.default_branch }}
 
@@ -200,26 +219,65 @@ jobs:
           ALPINE_VERSION=${{ env.ALPINE_VERSION }}
           S6_VERSION=${{ needs.setup.outputs.latest-s6-version }}
   
+  # Lets do a few chores
   update-readme:
-    needs: build
+    needs: [setup, build]
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
-      - name: Update README tags section
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install Python dependencies
         run: |
-          pip install requests
-          python3 .github/update_readme_tags.py
-
-      - name: Commit README update
+          pip install -r .github/scripts/requirements.txt
+      
+      - name: Update README with new tags
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+          # Use the Alpine branches that were actually built
+          ALPINE_BRANCHES='${{ needs.setup.outputs.alpine-branches }}'
+          echo "Processing Alpine branches that were built: $ALPINE_BRANCHES"
+          
+          # Convert JSON array to bash array
+          BRANCHES=$(echo "$ALPINE_BRANCHES" | jq -r '.[]')
+          
+          # Process each branch that was built
+          for BRANCH in $BRANCHES; do
+            if [ "$BRANCH" != "edge" ]; then
+              # Get the version for this branch (same as what was used in build)
+              VERSION=$(curl -s "https://cz.alpinelinux.org/alpine/${BRANCH}/releases/x86_64/latest-releases.yaml" | awk '/version:/ {print $2; exit}')
+              if [ -n "$VERSION" ]; then
+                echo "Updating README with successfully built version: $VERSION"
+                python .github/scripts/update_readme_tags.py README.md "$VERSION" "${{ github.repository }}"
+              else
+                echo "Warning: Could not get version for branch $BRANCH"
+              fi
+            else
+              echo "Skipping edge branch for README update"
+            fi
+          done
+      
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add README.md
-          git commit -m "chore: update tags section in README.md [skip ci]" || echo "No changes"
-          git push
-
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update README.md with latest tags [skip ci]"
+            git push origin ${{ github.ref_name }}
+          fi
+  
   chore:
-    needs: update-readme
+    needs: build
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
@@ -232,20 +290,4 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: ${{ github.repository }}
-  
-  dispatch:
-    needs: build
-    # Call only if from main branch
-    if: github.ref_name == github.event.repository.default_branch
-    strategy:
-      matrix:
-        repo: ['TundraSoft/deno', 'TundraSoft/nginx']
-    runs-on: ubuntu-latest
-    steps:
-      - 
-        name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.GIT_HUB_TOKEN }}
-          repository: ${{ matrix.repo }}
-          event-type: build
+

@@ -15,6 +15,18 @@ body:
       options:
         - label: I have searched the existing issues
           required: true
+  - type: dropdown
+    id: issue-category
+    attributes:
+      label: Issue Category
+      description: What category does this bug belong to?
+      options:
+        - Workflow
+        - Docker Image
+        - Package
+      default: 0
+    validations:
+      required: true
   - type: input
     id: contact
     attributes:

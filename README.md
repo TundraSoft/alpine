@@ -1,197 +1,306 @@
-# TundraSoft - Alpine
+# 🏔️ TundraSoft Alpine Base Image
+
+A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
+
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/build-docker.yml?event=push&logo=github&label=build)](https://github.com/TundraSoft/alpine/actions/workflows/build-docker.yml)
+[![Security Scan](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/security-scan.yml?event=schedule&logo=shield&label=security)](https://github.com/TundraSoft/alpine/actions/workflows/security-scan.yml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
+[![License](https://img.shields.io/github/license/TundraSoft/alpine.svg)](https://github.com/TundraSoft/alpine/blob/main/LICENSE)
+
+---
+
+## 📋 Table of Contents
+
+- [🚀 Quick Start](#-quick-start)
+- [🏷️ Available Tags](#️-available-tags)
+- [✨ Features](#-features)
+- [📖 Usage](#-usage)
+  - [Basic Usage](#basic-usage)
+  - [Environment Variables](#environment-variables)
+  - [Volumes](#volumes)
+- [⚙️ Service Management](#️-service-management)
+- [⏰ Cron Jobs](#-cron-jobs)
+- [🔧 Building](#-building)
+- [🔒 Security](#-security)
+- [📚 Components](#-components)
+- [🤝 Contributing](#-contributing)
+
+---
+
+## 🚀 Quick Start
+
+### 📦 Available Registries
+
+This image is available on multiple registries:
+
+- **Docker Hub**: `tundrasoft/alpine`
+- **GitHub Container Registry**: `ghcr.io/tundrasoft/alpine`
+
+```bash
+# Pull from Docker Hub (recommended)
+docker pull tundrasoft/alpine:latest
+
+# Pull from GitHub Container Registry
+docker pull ghcr.io/tundrasoft/alpine:latest
+
+# Run with basic setup
+docker run -d --name my-app tundrasoft/alpine:latest
+
+# Run with custom timezone and user
+docker run -d \
+  -e TZ=Asia/Kolkata \
+  -e PUID=1001 \
+  -e PGID=1001 \
+  --name my-app \
+  tundrasoft/alpine:latest
+```
+
+--- 
+## 🏷️ Available Tags
 
 <!-- TAGS-START -->
-## Tags
-
-| Tag | Versions / Date(s) |
-|------|--------------------|
+| Version | Tags |
+|---------|------|
 | [latest](https://hub.docker.com/r/tundrasoft/alpine/tags?name=latest) | Latest stable release |
-| [edge](https://hub.docker.com/r/tundrasoft/alpine/tags?name=edge) | 2025-07-04, 2025-06-30 |
+| [edge](https://hub.docker.com/r/tundrasoft/alpine/tags?name=edge) | Edge/development version |
+| [3.22](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22) | [3.22.0](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.0) |
+| [3.21](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21) | [3.21.3](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.3) |
+| [3.20](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20) | [3.20.6](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20.6) |
 | [3.19](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19) | [3.19.1](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19.1), [3.19.0](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19.0) |
 | [3.18](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18) | [3.18.6](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18.6), [3.18.5](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18.5), [3.18.4](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18.4) |
-
 <!-- TAGS-END -->
 
-[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/build-docker.yml?event=push&logo=github)](https://github.com/TundraSoft/alpine/actions/workflows/build-docker.yml?logo=github)
-[![GitHub issues](https://img.shields.io/github/issues-raw/tundrasoft/alpine.svg?logo=github)](https://github.com/tundrasoft/alpine/issues)
-[![GitHub PRs](https://img.shields.io/github/issues-pr-raw/tundrasoft/alpine.svg?logo=github)](https://github.com/tundrasoft/alpine/pulls) 
-[![License](https://img.shields.io/github/license/tundrasoft/alpine.svg)](https://github.com/tundrasoft/alpine/blob/master/LICENSE)
+---
 
-[![Repo size](https://img.shields.io/github/repo-size/tundrasoft/alpine?logo=github)](#)
-[![Docker image size](https://img.shields.io/docker/image-size/tundrasoft/alpine?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
+## ✨ Features
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
+- 🐧 **Latest Alpine Linux** - Minimal, secure base OS
+- 🔧 **S6 Overlay** - Advanced process supervision and service management
+- ⏰ **Dynamic Cron Support** - Environment variable-driven cron jobs
+- 👤 **Pre-configured User** - Non-root `tundra` user (UID/GID: 1000)
+- 🌍 **Timezone Support** - Easy timezone configuration
+- 🔄 **envsubst** - Environment variable substitution in config files
+- 🔒 **Security Focused** - Regular vulnerability scanning and updates
 
-This is a base docker image of alpine with few utilities pre-installed to make docker builds easy. 
-It contains:
-- s6 overlay for service management
-- cron service
-- envsubst
-- Base user & group set as tundra
+---
 
-## Usage
+## 📖 Usage
 
-This image, would ideally form as the base image for your containers. You can 
-import this as any other docker file:
+### Basic Usage
 
-```docker
-FROM tundrasoft/alpine
+Use as a base image in your Dockerfile:
+
+```dockerfile
+# From Docker Hub
+FROM tundrasoft/alpine:latest
+# Your application setup here
 ```
 
-or a specific version
-```docker
-FROM tundrasoft/alpine:3.15
+```dockerfile
+# From GitHub Container Registry
+FROM ghcr.io/tundrasoft/alpine:latest
+# Your application setup here
 ```
 
-By default, this image provides user `tundra` and group `tundra` which runs 
-on id 1000 and 1000 (UID, GID respectively).
+For specific versions:
+```dockerfile
+FROM tundrasoft/alpine:3.22
+# or
+FROM ghcr.io/tundrasoft/alpine:3.22
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PUID` | User ID for the `tundra` user | `1000` |
+| `PGID` | Group ID for the `tundra` group | `1000` |
+| `TZ` | Timezone (e.g., `Asia/Kolkata`, `America/New_York`) | `UTC` |
 
 ### Volumes
 
-Provides an optional volume /crons where you can add crontab items. 
+| Path | Description |
+|------|-------------|
+| `/crons` | Directory for cron job files (automatically loaded) |
 
-### Writing services
+---
 
-This image uses S6 to handle startup scripts. You can read more about s6 [`here`]([!https://github.com/just-containers/s6-overlay#the-docker-way "S6 Github link")
+## ⚙️ Service Management
 
-#### Service Triggers
+This image uses [S6 Overlay](https://github.com/just-containers/s6-overlay) for advanced process supervision and service management.
 
-S6 provides a handy little way to manage dependeny by adding dependencies.d 
-folder containing the trigger point. By default our image provides the 
-below list of trigger points. We strongly recommend you use these in your 
-images.
+### 🎯 Service Triggers
 
-| Name | Description |
-| --- | --- |
-| os-ready | Container is booted and basic setup is complete (Timezone, and user/group created)) |
-| config-start | Start making configuration changes to the container. Triggered post os-ready |
-| config-ready | Marks the end of configuration - Cron config is the only dependant |
-| service-start | Marks the start of initializing services |
-| service-ready | Marks the end of service initialization |
+S6 provides dependency management through trigger points. Use these recommended triggers in your derived images:
 
-*Notes*
-- The events config-ready and service ready are just trigger points. It does 
-not track if any new custom dependencies are loaded. 
+| Trigger | Description |
+|---------|-------------|
+| `os-ready` | Container booted, basic setup complete (timezone, user/group) |
+| `config-start` | Start configuration changes (triggered after `os-ready`) |
+| `config-ready` | Configuration complete (cron setup dependency) |
+| `service-start` | Begin service initialization |
+| `service-ready` | All services initialized |
 
-Example - Assume we have created a new container with 2 new services:
-1. config-nginx - This creates/manipulates nginx config. Dependency is config-start
-2. nginx - This starts nginx process and is to start post config-nginx
+### 📋 Built-in Services
 
-Now for nginx to actually start, the dependency.d must include both 
-service-start and config-nginx. This is because the event config-ready is not 
-watching for config-nginx as a dependency! 
+| Service | Purpose | Dependencies |
+|---------|---------|--------------|
+| `timezone` | Sets timezone from `TZ` env var | None |
+| `init-user` | Configures user/group IDs | None |
+| `config-cron` | Loads cron jobs from `/crons` | `config-start` |
+| `crond` | Starts cron daemon | `service-start`, `config-cron` |
 
-Besides the above mentioned triggers, below services are also present which 
-can be used as trigger points, though it is highly advisable not to
+### 💡 Example: Adding Custom Services
 
-| Name | Action performed |
-| --- | --- |
-| timezone | The timezone is set as per the env variable. This has no dependency |
-| init-user | The user & Group ID is modified as per env variable. This has no dependency |
-| config-cron | Any files in /crons folder is loaded into crontab. config-start triggers this execution |
-| crond | Starts the cron daemon. This depends on service-start and config-cron |
+```bash
+# Create service directory
+mkdir -p /etc/s6-overlay/s6-rc.d/my-service
 
+# Service type
+echo "longrun" > /etc/s6-overlay/s6-rc.d/my-service/type
 
-### Writing Cron jobs
+# Service script
+cat > /etc/s6-overlay/s6-rc.d/my-service/run << 'EOF'
+#!/command/with-contenv bash
+exec my-application --config /etc/my-app.conf
+EOF
 
-This image supports dynamic inclusion of CRON job where the schedule can be 
-set via environment variables. To setup a cron job:
+# Dependencies
+mkdir -p /etc/s6-overlay/s6-rc.d/my-service/dependencies.d
+touch /etc/s6-overlay/s6-rc.d/my-service/dependencies.d/service-start
 
-- Add a file in `/cron` folder (exposed as volume)
-    - This file can contain variables which would be replaced by envsubst
-- Start/Restart container
-
-example cron file in /crons/test
-```sh
-$TEST_SCHEDULE echo 'This is a test' >> /tmp/test 2>&1
+# Add to user bundle
+mkdir -p /etc/s6-overlay/s6-rc.d/user/contents.d
+touch /etc/s6-overlay/s6-rc.d/user/contents.d/my-service
 ```
 
-now run container, setting environment variable `TEST_SCHEDULE`
-```sh
-docker run -e TEST_SCHEDULE='* * * * * ' --name test-cron -d tundrasoft/alpine
+---
+
+## ⏰ Cron Jobs
+
+### 🚀 Dynamic Cron Setup
+
+Create cron jobs with environment variable substitution:
+
+1. **Create cron file** in `/crons/` directory
+2. **Use variables** that will be replaced by `envsubst`
+3. **Set environment variables** when running container
+
+### 📝 Example
+
+**Cron file:** `/crons/backup`
+```bash
+$BACKUP_SCHEDULE /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1
+$CLEANUP_SCHEDULE find /tmp -type f -mtime +7 -delete
 ```
 
-Lets connect to the container
-```sh
-docker exec -it test-cron /bin/sh
-#/ crontab -l
-* * * * * echo 'This is a test' >> /tmp/test 2>&1
+**Run container:**
+```bash
+docker run -d \
+  -e BACKUP_SCHEDULE='0 2 * * *' \
+  -e CLEANUP_SCHEDULE='0 4 * * 0' \
+  -v /host/crons:/crons \
+  tundrasoft/alpine:latest
 ```
 
-As you can see, the schedule is automatically replaced. You can add as many 
-files as you want in the folder /crons, but avoid folders. Multiple entries 
-can also be entered in same file. Due to this approach all inherited image 
-can inherit the cron job and specify their own.
-
-## Building the image
-
-The image can be built using the below command
-
-```sh
-docker build --no-cache --build-arg ALPINE_VERSION=3.19.1 --build-arg S6_OVERLAY_VERSION=3.1.3.0 -t tundrasoft/alpine .
+**Result:**
+```bash
+# docker exec container crontab -l
+0 2 * * * /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1
+0 4 * * 0 find /tmp -type f -mtime +7 -delete
 ```
 
-### Build Arguments
+### 🔒 Security Best Practices
 
-Below are the arguments available:
+> ⚠️ **Warning:** Only mount trusted cron files to prevent privilege escalation.
 
-
-| Name | Description |
-|---|---|
-| S6_OVERLAY_VERSION | The version of S6 to use. |
-| ALPINE_VERSION | The version of alpine to build on |
-
-
-### Environment variables
-
-Below are the environment variables available
-
-| Name | Description | Default Value |
-|---|---|---|
-| PUID | The User ID (created) | 1000 |
-| PGID | The Group ID (created) | 1000 |
-| TZ | The timezone to set | UTC |
-
-
-## Installed Components
-
-### [`S6`]([!https://github.com/just-containers/s6-overlay#the-docker-way "S6 Github link")
-
-The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images using s6 as a process supervisor.
-
-### Time Zone
-
-Timezone is available pre-packaged. To set timezone, pass environment variable TZ, example TZ=Asia/Kolkata
-**NOTE** This does not setup NTP or other service. The time is still fetched from the underlying host. The timezone is applied thereby
-displaying the correct time.
-
-### envsubst
-
-Added envsubst to help in applying environment variables in config files. 
-
-### cron
-
-To add cron jobs, simply create a file in /crons/ and it will be included. Example file:
-
-`dummy`
-```sh
-*/30 * * * * task-command >> /var/log/task.log 2>&1
+✅ **Secure:**
+```bash
+docker run -v /secure/path/crons:/crons tundrasoft/alpine:latest
 ```
 
-The above file, creates a cron entry which runs every `30` minutes calling the command `task-command` and saving output to `/var/log/task.log`
-
-### Security Notice for Cron Jobs
-
-**Warning:** If you mount arbitrary files or directories into `/crons`, ensure that only trusted users can write to these files. Malicious cron jobs could be executed with the container's privileges. Avoid mounting world-writable directories or files from untrusted sources.
-
-Example (secure):
-```sh
-docker run -v /secure/path/to/crons:/crons ...
+❌ **Insecure:**
+```bash
+docker run -v /tmp:/crons tundrasoft/alpine:latest  # /tmp is world-writable!
 ```
 
-Example (insecure, avoid):
-```sh
-docker run -v /tmp:/crons ... # /tmp is world-writable!
+---
+
+## 🔧 Building
+
+### 🏗️ Build Command
+
+```bash
+docker build \
+  --build-arg ALPINE_VERSION=3.22.0 \
+  --build-arg S6_VERSION=3.1.6.2 \
+  -t my-alpine-image .
 ```
 
-Only mount cron job files from secure, trusted locations.
+### ⚙️ Build Arguments
+
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `ALPINE_VERSION` | Alpine Linux version | `3.22.0` |
+| `S6_VERSION` | S6 Overlay version | `3.1.6.2` |
+
+---
+
+## 🔒 Security
+
+This repository implements comprehensive security scanning:
+
+- 🛡️ **Multi-layered scanning** with Trivy, CodeQL, Semgrep, and Grype
+- 🔍 **Secret detection** with GitLeaks (runs early in build process)
+- 📊 **Automated reporting** to GitHub Security tab
+- 🔄 **Daily security scans** and vulnerability monitoring
+
+For security issues, please use [GitHub's private vulnerability reporting](https://github.com/TundraSoft/alpine/security/advisories/new).
+
+---
+
+## 📚 Components
+
+### 🏔️ Alpine Linux
+Minimal, security-focused Linux distribution with small footprint.
+
+### 🔧 S6 Overlay
+Advanced init system and process supervisor for containers. Provides:
+- Service dependency management
+- Process supervision and restart
+- Clean shutdown handling
+
+### ⏰ Cron
+Full cron daemon with dynamic job loading and environment variable substitution.
+
+### 🔄 envsubst
+GNU gettext utility for environment variable substitution in configuration files.
+
+### 🌍 Timezone Support
+Full timezone database with easy configuration via `TZ` environment variable.
+
+---
+
+## 🤝 Contributing
+
+1. 🍴 **Fork** the repository
+2. 🌟 **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. 💾 **Commit** changes: `git commit -m 'Add amazing feature'`
+4. 📤 **Push** to branch: `git push origin feature/amazing-feature`
+5. 🔄 **Open** a Pull Request
+
+### 📋 Issue Templates
+
+- 🐛 **Bug Report**: Report issues with the image
+- ✨ **Feature Request**: Suggest improvements
+- 🔒 **Security**: Use private vulnerability reporting
+
+---
+
+<div align="center">
+
+**Built with ❤️ by [TundraSoft](https://github.com/TundraSoft)**
+
+[View on GitHub](https://github.com/TundraSoft/alpine) • [Docker Hub](https://hub.docker.com/r/tundrasoft/alpine) • [Report Issue](https://github.com/TundraSoft/alpine/issues)
+
+</div>
