@@ -58,6 +58,9 @@ def generate_tags_section(versions: Dict[str, str], repo_name: str) -> str:
     """Generate the available tags section."""
     tags_lines = ["## 🏷️ Available Tags", ""]
     
+    # Ensure repo_name is lowercase for Docker Hub URLs
+    repo_name_lower = repo_name.lower()
+    
     # Sort versions for display
     version_branches = []
     edge_branch = None
@@ -75,7 +78,7 @@ def generate_tags_section(versions: Dict[str, str], repo_name: str) -> str:
     if version_branches:
         latest_version = version_branches[0][1]
         tags_lines.extend([
-            f"- [`latest`](https://hub.docker.com/r/{repo_name}/tags?name=latest) - Latest stable release ({latest_version})",
+            f"- [`latest`](https://hub.docker.com/r/{repo_name_lower}/tags?name=latest) - Latest stable release ({latest_version})",
             ""
         ])
     
@@ -86,8 +89,8 @@ def generate_tags_section(versions: Dict[str, str], repo_name: str) -> str:
     for branch, ver in version_branches:
         major_minor = '.'.join(ver.split('.')[:2])
         tags_lines.extend([
-            f"- [`{ver}`](https://hub.docker.com/r/{repo_name}/tags?name={ver}) - Alpine {ver}",
-            f"- [`{major_minor}`](https://hub.docker.com/r/{repo_name}/tags?name={major_minor}) - Latest Alpine {major_minor}.x"
+            f"- [`{ver}`](https://hub.docker.com/r/{repo_name_lower}/tags?name={ver}) - Alpine {ver}",
+            f"- [`{major_minor}`](https://hub.docker.com/r/{repo_name_lower}/tags?name={major_minor}) - Latest Alpine {major_minor}.x"
         ])
     
     # Add edge if available
@@ -96,7 +99,7 @@ def generate_tags_section(versions: Dict[str, str], repo_name: str) -> str:
             "",
             "### Development Versions",
             "",
-            f"- [`edge`](https://hub.docker.com/r/{repo_name}/tags?name=edge) - Alpine edge (development branch)"
+            f"- [`edge`](https://hub.docker.com/r/{repo_name_lower}/tags?name=edge) - Alpine edge (development branch)"
         ])
     
     return "\n".join(tags_lines)
@@ -152,7 +155,7 @@ def generate_docker_readme(
 
 {description}
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/{repo_name}.svg?logo=docker)](https://hub.docker.com/r/{repo_name})
+[![Docker Pulls](https://img.shields.io/docker/pulls/{repo_name.lower()}.svg?logo=docker)](https://hub.docker.com/r/{repo_name.lower()})
 [![GitHub](https://img.shields.io/github/license/{github_repo}.svg)](https://github.com/{github_repo})
 
 ## 📋 Quick Links
@@ -212,7 +215,7 @@ CMD ["/app/start.sh"]
 
 **Built with ❤️ by [{github_repo.split('/')[0]}](https://github.com/{github_repo.split('/')[0]})**
 
-[View on GitHub](https://github.com/{github_repo}) • [Docker Hub](https://hub.docker.com/r/{repo_name}) • [Report Issue](https://github.com/{github_repo}/issues)
+[View on GitHub](https://github.com/{github_repo}) • [Docker Hub](https://hub.docker.com/r/{repo_name.lower()}) • [Report Issue](https://github.com/{github_repo}/issues)
 
 </div>
 """

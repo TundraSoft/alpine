@@ -75,14 +75,18 @@ def add_new_version(tags_dict: Dict[str, Set[str]], new_version: str) -> bool:
 
 def generate_tags_table(tags_dict: Dict[str, Set[str]], repo_name: str) -> str:
     """Generate the tags table markdown."""
+    
+    # Ensure repo_name is lowercase for Docker Hub URLs
+    repo_name_lower = repo_name.lower()
+    
     if not tags_dict:
         return f"""{TAGS_START_MARKER}
 ## Tags
 
 | Version | Tags |
 |---------|------|
-| [latest](https://hub.docker.com/r/{repo_name}/tags?name=latest) | Latest stable release |
-| [edge](https://hub.docker.com/r/{repo_name}/tags?name=edge) | Edge/development version |
+| [latest](https://hub.docker.com/r/{repo_name_lower}/tags?name=latest) | Latest stable release |
+| [edge](https://hub.docker.com/r/{repo_name_lower}/tags?name=edge) | Edge/development version |
 
 {TAGS_END_MARKER}"""
     
@@ -95,8 +99,8 @@ def generate_tags_table(tags_dict: Dict[str, Set[str]], repo_name: str) -> str:
         "",
         "| Version | Tags |",
         "|---------|------|",
-        f"| [latest](https://hub.docker.com/r/{repo_name}/tags?name=latest) | Latest stable release |",
-        f"| [edge](https://hub.docker.com/r/{repo_name}/tags?name=edge) | Edge/development version |"
+        f"| [latest](https://hub.docker.com/r/{repo_name_lower}/tags?name=latest) | Latest stable release |",
+        f"| [edge](https://hub.docker.com/r/{repo_name_lower}/tags?name=edge) | Edge/development version |"
     ]
     
     for major_minor in sorted_versions:
@@ -106,10 +110,10 @@ def generate_tags_table(tags_dict: Dict[str, Set[str]], repo_name: str) -> str:
         # Create links for each tag
         tag_links = []
         for tag in sorted_tags:
-            tag_links.append(f"[{tag}](https://hub.docker.com/r/{repo_name}/tags?name={tag})")
+            tag_links.append(f"[{tag}](https://hub.docker.com/r/{repo_name_lower}/tags?name={tag})")
         
         tags_cell = ", ".join(tag_links)
-        version_link = f"[{major_minor}](https://hub.docker.com/r/{repo_name}/tags?name={major_minor})"
+        version_link = f"[{major_minor}](https://hub.docker.com/r/{repo_name_lower}/tags?name={major_minor})"
         
         table_lines.append(f"| {version_link} | {tags_cell} |")
     

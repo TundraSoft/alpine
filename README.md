@@ -3,9 +3,10 @@
 <!-- DESCRIPTION-START -->
 A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
 <!-- DESCRIPTION-END -->
+[![Security Scanning](https://github.com/TundraSoft/alpine/actions/workflows/security-scan.yml/badge.svg)](https://github.com/TundraSoft/alpine/actions/workflows/security-scan.yml)
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/build-docker.yml?event=push&logo=github&label=build)](https://github.com/TundraSoft/alpine/actions/workflows/build-docker.yml)
-[![Security Scan](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/security-scan.yml?event=schedule&logo=shield&label=security)](https://github.com/TundraSoft/alpine/actions/workflows/security-scan.yml)
+[![Security Scan](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/security-scan.yml?logo=adguard&label=security)](https://github.com/TundraSoft/alpine/actions/workflows/security-scan.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
 [![License](https://img.shields.io/github/license/TundraSoft/alpine.svg)](https://github.com/TundraSoft/alpine/blob/main/LICENSE)
 

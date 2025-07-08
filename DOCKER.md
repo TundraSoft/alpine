@@ -2,8 +2,8 @@
 
 A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/TundraSoft/alpine.svg?logo=docker)](https://hub.docker.com/r/TundraSoft/alpine)
-[![GitHub](https://img.shields.io/github/license/TundraSoft/alpine.svg)](https://github.com/TundraSoft/alpine)
+[![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/TundraSoft/alpine)
+[![GitHub](https://img.shields.io/github/license/tundrasoft/alpine.svg)](https://github.com/TundraSoft/alpine)
 
 ## 📋 Quick Links
 
