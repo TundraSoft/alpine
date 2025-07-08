@@ -38,7 +38,15 @@ RUN set -eux; \
   tar -C /install/ -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz; \
   tar -C /install/ -Jxpf /tmp/syslogd-overlay-noarch.tar.xz; \
   tar -C /install/ -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz; \
-  rmdir -p /home /media/cdrom /media/floppy /media/usb /mnt /srv /usr/local/bin /usr/local/lib /usr/local/share 2>/dev/null || true; \
+  rmdir -p /home \
+         /media/cdrom \
+         /media/floppy \
+         /media/usb \
+         /mnt \
+         /srv \
+         /usr/local/bin \
+         /usr/local/lib \
+         /usr/local/share 2>/dev/null || true; \
   rm -rf /tmp/* /var/cache/apk/*;
 
 FROM scratch
@@ -63,15 +71,14 @@ ENV PUID=1000 \
 COPY --from=src /install /
 
 RUN set -eux; \
-  apk upgrade --update --no-cache; \
-  apk add --no-cache tzdata wget libintl gettext shadow curl jq apk-tools ca-certificates ssl_client; \
+  apk add --no-cache apk-tools ca-certificates curl gettext jq libintl shadow ssl_client tzdata wget; \
   cp /usr/bin/envsubst /usr/local/bin/envsubst; \
   update-ca-certificates; \
   rm -rf /tmp/* /var/cache/apk/*; \
   apk del wget gettext -r; \
-  addgroup -g ${PUID} tundra; \
-  adduser -DH -s /sbin/nologin -u ${PGID} tundra -G tundra;
+  addgroup -g ${PGID} tundra; \
+  adduser -DH -s /sbin/nologin -u ${PUID} tundra -G tundra;
 
-ADD /rootfs /
+COPY /rootfs /
 
 ENTRYPOINT ["/init"]

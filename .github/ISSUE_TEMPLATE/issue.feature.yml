@@ -15,6 +15,18 @@ body:
       options:
         - label: I have searched the existing issues
           required: true
+  - type: dropdown
+    id: feature-category
+    attributes:
+      label: Feature Category
+      description: What category does this feature belong to?
+      options:
+        - Workflow
+        - Docker Image
+        - Package
+      default: 0
+    validations:
+      required: true
   - type: input
     id: contact
     attributes:
