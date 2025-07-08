@@ -1,10 +1,17 @@
 name: Security Scanning
 
 on:
-  workflow_run:
-    workflows: ["Build and Test Docker Image"]
-    types:
-      - completed
+  push:
+    paths-ignore:
+      - .dockerignore
+      - .gitignore
+      - .github/ISSUE_TEMPLATE/*
+      - .github/PULL_REQUEST_TEMPLATE*
+      - ./README.md
+      - ./LICENSE
+    # Ignore CI if commit message contains '[skip ci]' (e.g., from update-readme chore)
+    # This is a GitHub Actions convention, not a YAML field, so we use a job-level if below
+  pull_request:
     branches: [ main ]
   workflow_dispatch:
     # Manual trigger for on-demand security scanning
@@ -21,8 +28,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Get Latest Alpine and S6 Versions
+        id: versions
+        run: |
+          # Get latest stable Alpine version
+          LATEST_ALPINE=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')
+          LATEST_ALPINE_BRANCH=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
+          
+          # Get latest S6 version
+          LATEST_S6=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+          
+          echo "alpine-version=${LATEST_ALPINE}" >> $GITHUB_OUTPUT
+          echo "alpine-branch=${LATEST_ALPINE_BRANCH}" >> $GITHUB_OUTPUT
+          echo "s6-version=${LATEST_S6}" >> $GITHUB_OUTPUT
+          
+          echo "Using Alpine ${LATEST_ALPINE} (branch: ${LATEST_ALPINE_BRANCH}) and S6 ${LATEST_S6}"
+
       - name: Build Docker image
-        run: docker build -t security-scan:latest .
+        run: |
+          docker build \
+            --build-arg ALPINE_BRANCH=${{ steps.versions.outputs.alpine-branch }} \
+            --build-arg ALPINE_VERSION=${{ steps.versions.outputs.alpine-version }} \
+            --build-arg S6_VERSION=${{ steps.versions.outputs.s6-version }} \
+            -t security-scan:latest .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -147,8 +175,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Get Latest Alpine and S6 Versions
+        id: versions
+        run: |
+          # Get latest stable Alpine version
+          LATEST_ALPINE=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')
+          LATEST_ALPINE_BRANCH=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
+          
+          # Get latest S6 version
+          LATEST_S6=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+          
+          echo "alpine-version=${LATEST_ALPINE}" >> $GITHUB_OUTPUT
+          echo "alpine-branch=${LATEST_ALPINE_BRANCH}" >> $GITHUB_OUTPUT
+          echo "s6-version=${LATEST_S6}" >> $GITHUB_OUTPUT
+          
+          echo "Using Alpine ${LATEST_ALPINE} (branch: ${LATEST_ALPINE_BRANCH}) and S6 ${LATEST_S6}"
+
       - name: Build Docker image
-        run: docker build -t grype-scan:latest .
+        run: |
+          docker build \
+            --build-arg ALPINE_BRANCH=${{ steps.versions.outputs.alpine-branch }} \
+            --build-arg ALPINE_VERSION=${{ steps.versions.outputs.alpine-version }} \
+            --build-arg S6_VERSION=${{ steps.versions.outputs.s6-version }} \
+            -t grype-scan:latest .
 
       - name: Run Grype vulnerability scanner
         uses: anchore/scan-action@v6

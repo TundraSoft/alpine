@@ -19,25 +19,7 @@ on:
 
 jobs:
 
-  # Secret Scanning with GitLeaks (runs early to catch secrets before build)
-  secret-scan:
-    name: Secret Scanning
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          # Fetch full history for GitLeaks to scan all commits
-          fetch-depth: 0
-
-      - name: Run GitLeaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_KEY}}
-
   setup:
-    needs: [secret-scan]
     if: |
       !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest

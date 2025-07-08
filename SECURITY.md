@@ -21,35 +21,35 @@ For critical security vulnerabilities, please use GitHub's private vulnerability
 ### 1. Trivy (Container & Dependency Scanner)
 - **Purpose**: Scans Docker images and filesystems for vulnerabilities
 - **Coverage**: Container images, dependencies, OS packages
-- **Runs**: After build completion, on-demand (manual trigger), and daily
+- **Runs**: On commit, on-demand (manual trigger), and daily
 - **Results**: Available in GitHub Security tab
 
 ### 2. CodeQL (Code Security Analysis)
 - **Purpose**: Identifies security vulnerabilities in code
 - **Coverage**: JavaScript, Python, and other supported languages
-- **Runs**: After build completion, on-demand (manual trigger), and daily
+- **Runs**: On commit, on-demand (manual trigger), and daily
 - **Results**: Available in GitHub Security tab
 
 ### 3. GitLeaks (Secret Scanner)
 - **Purpose**: Detects secrets, passwords, and API keys
 - **Coverage**: Git history, current files, commits
-- **Runs**: Early in build workflow (as backup) and on manual/scheduled security scans
+- **Runs**: On commit, on-demand (manual trigger), and daily
 - **Results**: Fails build if secrets found
 
 ### 4. Grype (Vulnerability Scanner)
 - **Purpose**: Alternative container vulnerability scanner
 - **Coverage**: Container images, OS packages
-- **Runs**: After build completion, on-demand (manual trigger), and daily
+- **Runs**: On commit, on-demand (manual trigger), and daily
 - **Results**: Available in GitHub Security tab
 
 ### 5. Semgrep (SAST Scanner)
 - **Purpose**: Static Application Security Testing
 - **Coverage**: Security patterns, code quality, secrets
-- **Runs**: After build completion, on-demand (manual trigger), and daily
+- **Runs**: On commit, on-demand (manual trigger), and daily
 - **Results**: Available in GitHub Security tab
 
 ### 6. Licensee (License Compliance)
 - **Purpose**: Detects and validates open source licenses
 - **Coverage**: Project licenses, dependency licenses
-- **Runs**: After build completion, on-demand (manual trigger), and daily
+- **Runs**: On commit, on-demand (manual trigger), and daily
 - **Results**: Available in workflow summary
