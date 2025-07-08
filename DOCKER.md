@@ -2,8 +2,8 @@
 
 A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/TundraSoft/alpine)
-[![GitHub](https://img.shields.io/github/license/tundrasoft/alpine.svg)](https://github.com/TundraSoft/alpine)
+[![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
+[![GitHub](https://img.shields.io/github/license/TundraSoft/alpine.svg)](https://github.com/TundraSoft/alpine)
 
 ## 📋 Quick Links
 
@@ -21,20 +21,20 @@ docker run -d --name my-app TundraSoft/alpine:latest
 
 ## 🏷️ Available Tags
 
-- [`latest`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=latest) - Latest stable release (3.22.0)
+- [`latest`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=latest) - Latest stable release (3.22.0)
 
 ### Stable Versions
 
-- [`3.22.0`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.22.0) - Alpine 3.22.0
-- [`3.22`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.22) - Latest Alpine 3.22.x
-- [`3.21.3`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.21.3) - Alpine 3.21.3
-- [`3.21`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.21) - Latest Alpine 3.21.x
-- [`3.20.6`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.20.6) - Alpine 3.20.6
-- [`3.20`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=3.20) - Latest Alpine 3.20.x
+- [`3.22.0`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.0) - Alpine 3.22.0
+- [`3.22`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22) - Latest Alpine 3.22.x
+- [`3.21.3`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.3) - Alpine 3.21.3
+- [`3.21`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21) - Latest Alpine 3.21.x
+- [`3.20.6`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20.6) - Alpine 3.20.6
+- [`3.20`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20) - Latest Alpine 3.20.x
 
 ### Development Versions
 
-- [`edge`](https://hub.docker.com/r/TundraSoft/alpine/tags?name=edge) - Alpine edge (development branch)
+- [`edge`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=edge) - Alpine edge (development branch)
 
 ## 📖 Usage
 
@@ -84,6 +84,6 @@ CMD ["/app/start.sh"]
 
 **Built with ❤️ by [TundraSoft](https://github.com/TundraSoft)**
 
-[View on GitHub](https://github.com/TundraSoft/alpine) • [Docker Hub](https://hub.docker.com/r/TundraSoft/alpine) • [Report Issue](https://github.com/TundraSoft/alpine/issues)
+[View on GitHub](https://github.com/TundraSoft/alpine) • [Docker Hub](https://hub.docker.com/r/tundrasoft/alpine) • [Report Issue](https://github.com/TundraSoft/alpine/issues)
 
 </div>
