@@ -151,7 +151,7 @@ jobs:
         run: docker build -t grype-scan:latest .
 
       - name: Run Grype vulnerability scanner
-        uses: anchore/scan-action@v3
+        uses: anchore/scan-action@v6
         id: grype
         with:
           image: "grype-scan:latest"
