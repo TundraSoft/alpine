@@ -20,14 +20,15 @@ on:
     - cron: '0 2 * * *'
 
 jobs:
-  # Container Security Scanning
-  container-scan:
-    name: Container Security Scan
+  # Setup versions once for all container-related scans
+  setup:
+    name: Get Versions
     runs-on: ubuntu-latest
+    outputs:
+      alpine-version: ${{ steps.versions.outputs.alpine-version }}
+      alpine-branch: ${{ steps.versions.outputs.alpine-branch }}
+      s6-version: ${{ steps.versions.outputs.s6-version }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Get Latest Alpine and S6 Versions
         id: versions
         run: |
@@ -44,12 +45,20 @@ jobs:
           
           echo "Using Alpine ${LATEST_ALPINE} (branch: ${LATEST_ALPINE_BRANCH}) and S6 ${LATEST_S6}"
 
+  # Container Security Scanning
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg ALPINE_BRANCH=${{ steps.versions.outputs.alpine-branch }} \
-            --build-arg ALPINE_VERSION=${{ steps.versions.outputs.alpine-version }} \
-            --build-arg S6_VERSION=${{ steps.versions.outputs.s6-version }} \
+            --build-arg ALPINE_BRANCH=${{ needs.setup.outputs.alpine-branch }} \
+            --build-arg S6_VERSION=${{ needs.setup.outputs.s6-version }} \
             -t security-scan:latest .
 
       - name: Run Trivy vulnerability scanner
@@ -171,32 +180,16 @@ jobs:
   grype-scan:
     name: Grype Vulnerability Scan
     runs-on: ubuntu-latest
+    needs: setup
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get Latest Alpine and S6 Versions
-        id: versions
-        run: |
-          # Get latest stable Alpine version
-          LATEST_ALPINE=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')
-          LATEST_ALPINE_BRANCH=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
-          
-          # Get latest S6 version
-          LATEST_S6=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-          
-          echo "alpine-version=${LATEST_ALPINE}" >> $GITHUB_OUTPUT
-          echo "alpine-branch=${LATEST_ALPINE_BRANCH}" >> $GITHUB_OUTPUT
-          echo "s6-version=${LATEST_S6}" >> $GITHUB_OUTPUT
-          
-          echo "Using Alpine ${LATEST_ALPINE} (branch: ${LATEST_ALPINE_BRANCH}) and S6 ${LATEST_S6}"
-
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg ALPINE_BRANCH=${{ steps.versions.outputs.alpine-branch }} \
-            --build-arg ALPINE_VERSION=${{ steps.versions.outputs.alpine-version }} \
-            --build-arg S6_VERSION=${{ steps.versions.outputs.s6-version }} \
+            --build-arg ALPINE_BRANCH=${{ needs.setup.outputs.alpine-branch }} \
+            --build-arg S6_VERSION=${{ needs.setup.outputs.s6-version }} \
             -t grype-scan:latest .
 
       - name: Run Grype vulnerability scanner
@@ -217,7 +210,7 @@ jobs:
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
-    needs: [container-scan, dependency-scan, code-scan, secret-scan, sast-scan, grype-scan]
+    needs: [setup, container-scan, dependency-scan, code-scan, secret-scan, sast-scan, grype-scan]
     if: always()
     steps:
       - name: Security Scan Summary

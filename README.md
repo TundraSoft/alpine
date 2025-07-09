@@ -63,15 +63,14 @@ docker run -d \
 <!-- TAGS-START -->
 ## Tags
 
-| Version | Tags |
-|---------|------|
+| Branch | Available Tags |
+|--------|---------------|
 | [latest](https://hub.docker.com/r/tundrasoft/alpine/tags?name=latest) | Latest stable release |
 | [edge](https://hub.docker.com/r/tundrasoft/alpine/tags?name=edge) | Edge/development version |
 | [3.22](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22) | [3.22.0](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.0) |
 | [3.21](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21) | [3.21.3](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.3) |
 | [3.20](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20) | [3.20.6](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20.6) |
-| [3.19](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19) | [3.19.1](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19.1), [3.19.0](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19.0) |
-| [3.18](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18) | [3.18.6](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18.6), [3.18.5](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18.5), [3.18.4](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.18.4) |
+| [3.19](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19) | [3.19.1](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19.1) |
 
 <!-- TAGS-END -->
 
@@ -109,9 +108,9 @@ FROM ghcr.io/tundrasoft/alpine:latest
 
 For specific versions:
 ```dockerfile
-FROM tundrasoft/alpine:3.22
+FROM tundrasoft/alpine:3.22.0
 # or
-FROM ghcr.io/tundrasoft/alpine:3.22
+FROM ghcr.io/tundrasoft/alpine:3.22.0
 ```
 
 ### Environment Variables
@@ -239,7 +238,7 @@ docker run -v /tmp:/crons tundrasoft/alpine:latest  # /tmp is world-writable!
 
 ```bash
 docker build \
-  --build-arg ALPINE_VERSION=3.22.0 \
+  --build-arg ALPINE_BRANCH=v3.22 \
   --build-arg S6_VERSION=3.1.6.2 \
   -t my-alpine-image .
 ```
@@ -249,7 +248,7 @@ docker build \
 <!-- BUILD-ARGS-START -->
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `ALPINE_VERSION` | Alpine Linux version | `3.22.0` |
+| `ALPINE_BRANCH` | Alpine Linux branch (latest patch version auto-detected) | `v3.22`, `v3.21`, `edge` |
 | `S6_VERSION` | S6 Overlay version | `3.1.6.2` |
 <!-- BUILD-ARGS-END -->
 
