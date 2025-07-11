@@ -14,6 +14,7 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
+    # Weekly builds on Sundays at midnight UTC to catch latest Alpine patches
     - 
       cron: '0 0 * * 0'
 
@@ -34,7 +35,10 @@ jobs:
         name: Get Alpine Versions
         id: alpine-versions
         run: |
-          LATEST_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
+          # Get the latest stable branch for comparison
+          LATEST_BRANCH=$(curl -s https://cz.alpinelinux.org/alpine/latest-stable/releases/x86_64/latest-releases.yaml | awk '/branch:/ {print $2; exit}')
+          
+          # Build list of branches to test (edge + last 3 stable branches)
           ALPINE_BRANCHES="edge "
           LIMIT=3
           ALL_BRANCHES=$(curl -s https://cz.alpinelinux.org/alpine/ | grep -oP '(?<=v)[^/]+(?=/")' | sort -V | tail -n 6 | tac)
@@ -49,9 +53,11 @@ jobs:
               break
             fi
           done
+          
+          # Output as JSON array
           ALPINE_BRANCHES=$(echo $ALPINE_BRANCHES | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
           echo "alpine-branches=${ALPINE_BRANCHES}" >> "$GITHUB_OUTPUT"
-          echo "latest-alpine-branch=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "latest-alpine-branch=${LATEST_BRANCH}" >> "$GITHUB_OUTPUT"
           
       - 
         name: Get S6 Versions
@@ -82,7 +88,6 @@ jobs:
         # s6-version: ${{ fromJson(needs.setup.outputs.s6-versions) }}
     
     env:
-      ALPINE_VERSION: ''
       TEST_TAG: alpine-s6
     
     steps:
@@ -95,8 +100,16 @@ jobs:
     
     -
       name: Get the ALPINE VERSION
+      id: get-version
       run: |
-        echo "ALPINE_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/${{ matrix.alpine-branch }}/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')" >> $GITHUB_ENV
+        if [ "${{ matrix.alpine-branch }}" = "edge" ]; then
+          echo "ALPINE_VERSION=edge" >> $GITHUB_ENV
+          echo "alpine-version=edge" >> $GITHUB_OUTPUT
+        else
+          VERSION=$(curl -s https://cz.alpinelinux.org/alpine/${{ matrix.alpine-branch }}/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')
+          echo "ALPINE_VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "alpine-version=${VERSION}" >> $GITHUB_OUTPUT
+        fi
     
     - 
       name: Extract Docker Metadata
@@ -121,16 +134,15 @@ jobs:
           org.opencontainers.image.title=Alpine Linux with S6 Overlay
         tags: |
           type=raw,prefix=,value=latest,enable=${{ ( matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && matrix.alpine-branch != 'edge' && github.ref_name == github.event.repository.default_branch) }}
-          # Version tags for non-edge releases
-          type=semver,pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name == github.event.repository.default_branch }}
-          type=semver,pattern={{major}}.{{minor}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name == github.event.repository.default_branch }}
-          type=semver,pattern={{major}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && github.ref_name == github.event.repository.default_branch }}
+          # Version tags for non-edge releases (Major.Minor.Patch, Major.Minor, Major)
+          type=semver,pattern={{version}},value=${{ steps.get-version.outputs.alpine-version }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name == github.event.repository.default_branch }}
+          type=semver,pattern={{major}}.{{minor}},value=${{ steps.get-version.outputs.alpine-version }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name == github.event.repository.default_branch }}
+          type=semver,pattern={{major}},value=${{ steps.get-version.outputs.alpine-version }},enable=${{ matrix.alpine-branch != 'edge' && matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && github.ref_name == github.event.repository.default_branch }}
           # Edge version tags
-          type=raw,value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch == 'edge' && github.ref_name == github.event.repository.default_branch }}
           type=raw,value=edge,enable=${{ matrix.alpine-branch == 'edge' && github.ref_name == github.event.repository.default_branch }}
           # Branch-prefixed tags for non-default branches
-          type=semver,prefix=${{ format('{0}-', github.ref_name)}},pattern={{major}}.{{minor}}.{{patch}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name != github.event.repository.default_branch }}
-          type=raw,prefix=${{ format('{0}-', github.ref_name)}},value=${{ env.ALPINE_VERSION }},enable=${{ matrix.alpine-branch == 'edge' && github.ref_name != github.event.repository.default_branch }}
+          type=semver,prefix=${{ format('{0}-', github.ref_name)}},pattern={{version}},value=${{ steps.get-version.outputs.alpine-version }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name != github.event.repository.default_branch }}
+          type=raw,prefix=${{ format('{0}-', github.ref_name)}},value=edge,enable=${{ matrix.alpine-branch == 'edge' && github.ref_name != github.event.repository.default_branch }}
 
     - 
       name: Build Test Image
@@ -143,19 +155,26 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           ALPINE_BRANCH=${{ matrix.alpine-branch }}
-          ALPINE_VERSION=${{ env.ALPINE_VERSION }}
           S6_VERSION=${{ needs.setup.outputs.latest-s6-version }}
     
     -
       name: Test Image
       run: |
-        # Check Alpine version
-        output=$(docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "cat /etc/alpine-release | grep -q ${{ env.ALPINE_VERSION }} && echo 'OK' || echo 'KO'")
-        if [ "$output" == "OK" ]; then
-          echo "Alpine version test passed"
+        # Get the Alpine version from the built container
+        ALPINE_VERSION=$(docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "cat /etc/alpine-release")
+        echo "Container Alpine version: $ALPINE_VERSION"
+        
+        # Check Alpine version matches expected for the branch
+        if [ "${{ matrix.alpine-branch }}" != "edge" ]; then
+          EXPECTED_VERSION=$(curl -s https://cz.alpinelinux.org/alpine/${{ matrix.alpine-branch }}/releases/x86_64/latest-releases.yaml | awk '/version:/ {print $2; exit}')
+          if echo "$ALPINE_VERSION" | grep -q "$EXPECTED_VERSION"; then
+            echo "Alpine version test passed"
+          else
+            echo "Alpine version test failed: expected $EXPECTED_VERSION, got $ALPINE_VERSION"
+            exit 1
+          fi
         else
-          echo "Alpine version test failed"
-          exit 1
+          echo "Skipping version check for edge branch"
         fi
         # Check s6-overlay is present
         docker run --rm ${{ env.TEST_TAG}} /bin/sh -c "[ -x /init ] && echo 's6-overlay present' || (echo 's6-overlay missing' && exit 1)"
@@ -198,7 +217,6 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           ALPINE_BRANCH=${{ matrix.alpine-branch }}
-          ALPINE_VERSION=${{ env.ALPINE_VERSION }}
           S6_VERSION=${{ needs.setup.outputs.latest-s6-version }}
   
   # Lets do a few chores

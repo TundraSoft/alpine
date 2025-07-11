@@ -1,12 +1,10 @@
 ARG S6_VERSION=3.1.6.2 \
-  ALPINE_BRANCH=v3.19 \
-  ALPINE_VERSION=3.19.1
+  ALPINE_BRANCH=v3.19
 
 FROM alpine:latest AS src
 
 ARG S6_VERSION \
     ALPINE_BRANCH \
-    ALPINE_VERSION \
     TARGETPLATFORM \
     TARGETARCH \
     TARGETVARIANT
@@ -21,7 +19,15 @@ ENV PUID=1000 \
 
 WORKDIR /install
 
-RUN set -eux; \ 
+RUN set -eux; \
+  # Dynamically fetch the latest version for the specified branch
+  if [ "${ALPINE_BRANCH}" = "edge" ]; then \
+    ALPINE_VERSION="edge"; \
+  else \
+    ALPINE_VERSION=$(wget -qO- "https://cz.alpinelinux.org/alpine/${ALPINE_BRANCH}/releases/x86_64/latest-releases.yaml" | awk '/version:/ {print $2; exit}'); \
+  fi; \
+  echo "Using Alpine ${ALPINE_VERSION} from branch ${ALPINE_BRANCH}"; \
+  # Set architecture mappings
   case "${TARGETPLATFORM}" in \
     "linux/amd64"|"linux/x86_64") export ALPINE_ARCH="x86_64"; export S6_ARCH="x86_64" ;; \
     "linux/arm64"|"linux/arm/v8") export ALPINE_ARCH="aarch64"; export S6_ARCH="aarch64" ;; \
@@ -29,7 +35,14 @@ RUN set -eux; \
     "linux/arm/v6") export ALPINE_ARCH="armhf"; export S6_ARCH="armhf" ;; \
     *) echo "Unsupported platform: ${TARGETPLATFORM}" ; exit 1 ;; \
     esac; \
-  wget -qO- https://dl-cdn.alpinelinux.org/alpine/${ALPINE_BRANCH}/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz| tar -xz; \
+  # Download Alpine minirootfs with dynamically determined version
+  if [ "${ALPINE_BRANCH}" = "edge" ]; then \
+    wget -qO- "https://dl-cdn.alpinelinux.org/alpine/edge/releases/${ALPINE_ARCH}/latest-releases.yaml" | \
+    awk '/file:.*minirootfs.*\.tar\.gz/ {print "https://dl-cdn.alpinelinux.org/alpine/edge/releases/'${ALPINE_ARCH}'/" $2}' | \
+    head -1 | xargs wget -qO- | tar -xz; \
+  else \
+    wget -qO- "https://dl-cdn.alpinelinux.org/alpine/${ALPINE_BRANCH}/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz" | tar -xz; \
+  fi; \
   wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-noarch.tar.xz \
         https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-symlinks-noarch.tar.xz \
         https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/syslogd-overlay-noarch.tar.xz \
@@ -55,7 +68,6 @@ LABEL maintainer="Abhinav A V <36784+abhai2k@users.noreply.github.com>"
 
 ARG S6_VERSION \
     ALPINE_BRANCH \
-    ALPINE_VERSION \
     TARGETPLATFORM \
     TARGETARCH \
     TARGETVARIANT

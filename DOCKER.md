@@ -1,6 +1,11 @@
 # Alpine Docker Image
 
-A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
+A lightweight, secur### Build Arguments
+
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `ALPINE_BRANCH` | Alpine Linux branch (latest patch version auto-detected) | `v3.22`, `v3.21`, `edge` |
+| `S6_VERSION` | S6 Overlay version | `3.1.6.2` |ne Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/tundrasoft/alpine.svg?logo=docker)](https://hub.docker.com/r/tundrasoft/alpine)
 [![GitHub](https://img.shields.io/github/license/TundraSoft/alpine.svg)](https://github.com/TundraSoft/alpine)
@@ -21,20 +26,15 @@ docker run -d --name my-app TundraSoft/alpine:latest
 
 ## 🏷️ Available Tags
 
-- [`latest`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=latest) - Latest stable release (3.22.0)
+- [`latest`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=latest) - Latest stable release
+- [`edge`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=edge) - Alpine edge (development branch)
 
 ### Stable Versions
 
-- [`3.22.0`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.0) - Alpine 3.22.0
-- [`3.22`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22) - Latest Alpine 3.22.x
-- [`3.21.3`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.3) - Alpine 3.21.3
-- [`3.21`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21) - Latest Alpine 3.21.x
-- [`3.20.6`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20.6) - Alpine 3.20.6
-- [`3.20`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20) - Latest Alpine 3.20.x
-
-### Development Versions
-
-- [`edge`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=edge) - Alpine edge (development branch)
+- [`3.22.0`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.0), [`3.22`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22) - Alpine 3.22.x
+- [`3.21.3`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.3), [`3.21`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21) - Alpine 3.21.x  
+- [`3.20.6`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20.6), [`3.20`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.20) - Alpine 3.20.x
+- [`3.19.1`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19.1), [`3.19`](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.19) - Alpine 3.19.x
 
 ## 📖 Usage
 
@@ -50,7 +50,7 @@ docker run -d --name my-app TundraSoft/alpine:latest
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `ALPINE_VERSION` | Alpine Linux version | `3.22.0` |
+| `ALPINE_BRANCH` | Alpine Linux branch (version automatically detected) | `v3.22`, `v3.21`, `edge` |
 | `S6_VERSION` | S6 Overlay version | `3.1.6.2` |
 
 ## 🔧 Building Custom Images
