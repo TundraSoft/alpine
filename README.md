@@ -63,8 +63,8 @@ docker run -d \
 <!-- TAGS-START -->
 ## Tags
 
-| Branch | Available Tags |
-|--------|---------------|
+| Version | Tags |
+|---------|------|
 | [latest](https://hub.docker.com/r/tundrasoft/alpine/tags?name=latest) | Latest stable release |
 | [edge](https://hub.docker.com/r/tundrasoft/alpine/tags?name=edge) | Edge/development version |
 | [3.22](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22) | [3.22.0](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.0) |
