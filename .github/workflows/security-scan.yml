@@ -69,7 +69,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -91,33 +91,33 @@ jobs:
           output: 'trivy-dependency-results.sarif'
 
       - name: Upload Trivy dependency scan results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-dependency-results.sarif'
 
   # Code Security Scanning
-  code-scan:
-    name: Code Security Scan
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: javascript, python
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+  # Disabled: CodeQL is for traditional code (JS, Python, etc.)
+  # This project uses Dockerfile/Shell - handled by Semgrep instead
+  # code-scan:
+  #   name: Code Security Scan
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     actions: read
+  #     contents: read
+  #     security-events: write
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Initialize CodeQL
+  #       uses: github/codeql-action/init@v3
+  #
+  #     - name: Autobuild
+  #       uses: github/codeql-action/autobuild@v3
+  #
+  #     - name: Perform CodeQL Analysis
+  #       uses: github/codeql-action/analyze@v3
 
   # Secret Scanning (Free) - Also runs in build workflow as backup
   secret-scan:
@@ -193,7 +193,7 @@ jobs:
             -t grype-scan:latest .
 
       - name: Run Grype vulnerability scanner
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v7
         id: grype
         with:
           image: "grype-scan:latest"
@@ -201,7 +201,7 @@ jobs:
           severity-cutoff: high
 
       - name: Upload Grype scan results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: ${{ steps.grype.outputs.sarif }}
@@ -210,7 +210,7 @@ jobs:
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
-    needs: [setup, container-scan, dependency-scan, code-scan, secret-scan, sast-scan, grype-scan]
+    needs: [setup, container-scan, dependency-scan, secret-scan, sast-scan, grype-scan]
     if: always()
     steps:
       - name: Security Scan Summary
@@ -218,18 +218,12 @@ jobs:
           echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
           echo "- Container Security: ${{ needs.container-scan.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Dependency Security: ${{ needs.dependency-scan.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Code Security: ${{ needs.code-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- SAST Scanning (Semgrep): ${{ needs.sast-scan.result }}" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
             echo "- Secret Scanning: skipped (runs in build workflow)" >> $GITHUB_STEP_SUMMARY
           else
             echo "- Secret Scanning: ${{ needs.secret-scan.result }}" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "- SAST Scanning: ${{ needs.sast-scan.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Grype Scanning: ${{ needs.grype-scan.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Check the Security tab for detailed results." >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Note**: Secret scanning (GitLeaks) ran in the build workflow and provides early detection." >> $GITHUB_STEP_SUMMARY
-            echo "GitLeaks also runs on manual and scheduled security scans for comprehensive coverage." >> $GITHUB_STEP_SUMMARY
-          fi
