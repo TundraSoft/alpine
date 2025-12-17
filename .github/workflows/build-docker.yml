@@ -295,10 +295,10 @@ jobs:
       #       '${{ needs.setup.outputs.latest-s6-version }}' \
       #       'description:DESCRIPTION-START,DESCRIPTION-END;env-vars:ENV-VARS-START,ENV-VARS-END;build-args:BUILD-ARGS-START,BUILD-ARGS-END'
       
-      - name: Update CHANGELOG with build info
+      - name: Update CHANGELOG with build info and PR commits
         run: |
-          # Get the last commit message to extract build info
-          COMMIT_MSG=$(git log -1 --pretty=%B)
+          # Get commit messages for changelog
+          CHANGELOG_ENTRY=""
           
           # Extract Alpine versions that were built
           ALPINE_BRANCHES='${{ needs.setup.outputs.alpine-branches }}'
@@ -311,11 +311,53 @@ jobs:
             if [ -n "$VERSION" ]; then
               # Check if this version already exists in CHANGELOG
               if ! grep -q "Alpine.*${VERSION}" CHANGELOG.md 2>/dev/null; then
-                # Add entry to CHANGELOG under [Unreleased]
-                sed -i '/^## \[Unreleased\]/a \\n### Changed\n- Build with Alpine '"${VERSION}"' and S6 '"${{ needs.setup.outputs.latest-s6-version }}"'' CHANGELOG.md
-                echo "✅ Updated CHANGELOG with Alpine ${VERSION}"
+                CHANGELOG_ENTRY="- Build with Alpine ${VERSION} and S6 ${{ needs.setup.outputs.latest-s6-version }}"
               fi
             fi
+          fi
+          
+          # Extract commits from PR if triggered by pull_request event
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "📝 Processing PR commits for changelog..."
+            # Get commits from the PR
+            COMMITS=$(git log ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} --pretty=%B 2>/dev/null || true)
+            if [ -n "$COMMITS" ]; then
+              # Parse commit messages and add to changelog
+              echo "$COMMITS" | grep -E '^(feat|fix|docs|style|refactor|perf|test|chore):' | sed 's/^/- /' >> changelog_entries.txt 2>/dev/null || true
+            fi
+          fi
+          
+          # Get last 5 commits on push events
+          if [ "${{ github.event_name }}" = "push" ]; then
+            COMMITS=$(git log -5 --pretty=%B)
+            if [ -n "$COMMITS" ]; then
+              echo "$COMMITS" | grep -E '^(feat|fix|docs|style|refactor|perf|test|chore):' | sed 's/^/- /' >> changelog_entries.txt 2>/dev/null || true
+            fi
+          fi
+          
+          # Merge all changelog entries and update CHANGELOG.md
+          if [ -f changelog_entries.txt ] || [ -n "$CHANGELOG_ENTRY" ]; then
+            # Create combined changelog entry
+            COMBINED_ENTRY=""
+            if [ -n "$CHANGELOG_ENTRY" ]; then
+              COMBINED_ENTRY="$CHANGELOG_ENTRY"
+            fi
+            if [ -f changelog_entries.txt ]; then
+              COMMIT_LINES=$(cat changelog_entries.txt | sort -u)
+              if [ -n "$COMBINED_ENTRY" ]; then
+                COMBINED_ENTRY="$COMBINED_ENTRY"$'\n'"$COMMIT_LINES"
+              else
+                COMBINED_ENTRY="$COMMIT_LINES"
+              fi
+            fi
+            
+            # Add to CHANGELOG under [Unreleased]
+            if [ -n "$COMBINED_ENTRY" ]; then
+              sed -i '/^## \[Unreleased\]/a \\n### Changed\n'"$COMBINED_ENTRY" CHANGELOG.md
+              echo "✅ Updated CHANGELOG with entries"
+            fi
+            
+            rm -f changelog_entries.txt
           fi
 
       - name: Commit and push changes
