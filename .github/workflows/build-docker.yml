@@ -284,7 +284,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Update README.md with latest tags [skip ci]"
+            git commit -m "chore: Update README.md with latest tags [skip ci] [skip changelog]"
             git push origin ${{ github.ref_name }}
           fi
   

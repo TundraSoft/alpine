@@ -12,7 +12,7 @@ permissions:
 jobs:
   update-changelog:
     name: Update Changelog on PR Merge
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true && !contains(github.event.pull_request.title, '[skip changelog]')
     runs-on: ubuntu-latest
 
     steps:
