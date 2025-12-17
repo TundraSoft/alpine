@@ -1,5 +1,9 @@
 name: Build and Test Docker Image
 
+permissions:
+  contents: write
+  packages: write
+
 on:
   push:
     paths-ignore:
@@ -122,16 +126,17 @@ jobs:
           name=${{ github.repository }},enable=true
           name=ghcr.io/${{ github.repository }},enable=true
         labels: |
-          org.opencontainers.image.source=${{ github.repositoryUrl }}
+          org.opencontainers.image.title=Alpine Linux with S6 Overlay
+          org.opencontainers.image.description=Lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities
+          org.opencontainers.image.vendor=TundraSoft
+          org.opencontainers.image.licenses=MIT
+          org.opencontainers.image.url=${{ github.repositoryUrl }}
+          org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
+          org.opencontainers.image.source=${{ github.repositoryUrl }}.git
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.created=${{ github.event.repository.pushed_at }}
           org.opencontainers.image.authors=${{ github.actor }}
           org.opencontainers.image.branch=${{ github.ref_name }}
-          org.opencontainers.image.vendor=Tundrasoft
-          org.opencontainers.image.licenses=MIT
-          org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
-          org.opencontainers.image.description=Alpine Linux with S6 Overlay
-          org.opencontainers.image.title=Alpine Linux with S6 Overlay
         tags: |
           type=raw,prefix=,value=latest,enable=${{ ( matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && matrix.alpine-branch != 'edge' && github.ref_name == github.event.repository.default_branch) }}
           # Version tags for non-edge releases (Major.Minor.Patch, Major.Minor, Major)
@@ -210,7 +215,9 @@ jobs:
       with:
         context: .
         push: true
-        # Edge Alpine has QEMU trigger issues on arm platforms, only build edge on amd64
+        # Build matrix optimization:
+        # - Edge Alpine: amd64 only (QEMU trigger issues on arm)
+        # - Stable versions: amd64, arm64, arm/v7 (dropped arm/v6 - EOL)
         platforms: ${{ matrix.alpine-branch == 'edge' && 'linux/amd64' || 'linux/amd64,linux/arm64,linux/arm/v7' }}
         provenance: true
         tags: ${{ steps.meta.outputs.tags }}
@@ -218,6 +225,18 @@ jobs:
         build-args: |
           ALPINE_BRANCH=${{ matrix.alpine-branch }}
           S6_VERSION=${{ needs.setup.outputs.latest-s6-version }}
+    
+    -
+      name: Get built image size
+      if: github.ref_name == github.event.repository.default_branch
+      run: |
+        echo "## 📦 Image Size Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Platform | Alpine | S6 | Size |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|--------|-----|------|" >> $GITHUB_STEP_SUMMARY
+        echo "| ${{ matrix.alpine-branch }} | - | - | Pushed to registry |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "⚠️ Actual sizes available in Docker Hub: https://hub.docker.com/r/tundrasoft/alpine/tags" >> $GITHUB_STEP_SUMMARY
   
   # Lets do a few chores
   update-readme:
@@ -276,15 +295,38 @@ jobs:
       #       '${{ needs.setup.outputs.latest-s6-version }}' \
       #       'description:DESCRIPTION-START,DESCRIPTION-END;env-vars:ENV-VARS-START,ENV-VARS-END;build-args:BUILD-ARGS-START,BUILD-ARGS-END'
       
+      - name: Update CHANGELOG with build info
+        run: |
+          # Get the last commit message to extract build info
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          
+          # Extract Alpine versions that were built
+          ALPINE_BRANCHES='${{ needs.setup.outputs.alpine-branches }}'
+          BRANCHES=$(echo "$ALPINE_BRANCHES" | jq -r '.[]' | grep -v edge | head -1)
+          
+          if [ -n "$BRANCHES" ]; then
+            # Get the version for the first branch built
+            VERSION=$(curl -s "https://cz.alpinelinux.org/alpine/${BRANCHES}/releases/x86_64/latest-releases.yaml" | awk '/version:/ {print $2; exit}')
+            
+            if [ -n "$VERSION" ]; then
+              # Check if this version already exists in CHANGELOG
+              if ! grep -q "Alpine.*${VERSION}" CHANGELOG.md 2>/dev/null; then
+                # Add entry to CHANGELOG under [Unreleased]
+                sed -i '/^## \[Unreleased\]/a \\n### Changed\n- Build with Alpine '"${VERSION}"' and S6 '"${{ needs.setup.outputs.latest-s6-version }}"'' CHANGELOG.md
+                echo "✅ Updated CHANGELOG with Alpine ${VERSION}"
+              fi
+            fi
+          fi
+
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add README.md
+          git add README.md CHANGELOG.md
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore: Update README.md with latest tags [skip ci] [skip changelog]"
+            git commit -m "chore: Update README and CHANGELOG [skip ci]"
             git push origin ${{ github.ref_name }}
           fi
   

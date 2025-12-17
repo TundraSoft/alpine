@@ -30,7 +30,8 @@ A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and
   - [Cron Examples](#cron-examples)
   - [Security Best Practices](#security-best-practices)
 - [🔧 Building](#-building)
-- [🔒 Security](#-security)
+- [� Examples](#-examples)
+- [�🔒 Security](#-security)
 - [📚 Components](#-components)
 - [📖 Reference](#reference)
 - [📝 Changelog](#changelog)
@@ -528,7 +529,18 @@ docker build \
 
 ---
 
-## 🔒 Security
+## � Examples
+
+Practical examples are available in the [examples/](examples/) directory:
+
+- **Web Service** ([Dockerfile.web-service](examples/Dockerfile.web-service)): Custom S6 service with HTTP server and health checks
+- **Cron Application** ([Dockerfile.cron-app](examples/Dockerfile.cron-app)): Scheduled tasks with logging and volume mounts
+
+See [examples/README.md](examples/README.md) for detailed build/run instructions, debugging tips, and common patterns.
+
+---
+
+## �🔒 Security
 
 This repository implements comprehensive security scanning:
 

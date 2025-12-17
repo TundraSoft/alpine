@@ -1,0 +1,62 @@
+# Example: Application with Scheduled Cron Jobs
+# 
+# This example demonstrates how to build an application that uses cron for scheduled tasks.
+# The image runs a background job and logs the execution.
+#
+# Build: docker build -f examples/Dockerfile.cron-app -t my-cron-app .
+# Run:   docker run -d --name cron my-cron-app
+# Logs:  docker exec cron tail -f /var/log/jobs.log
+
+FROM tundrasoft/alpine:latest
+
+# Install additional utilities
+RUN apk add --no-cache \
+    curl
+
+# Create app directory
+WORKDIR /app
+
+# Copy job script
+COPY --chown=tundra:tundra <<EOF /app/job.sh
+#!/bin/sh
+# Example cron job
+echo "Job executed at \$(date)" >> /var/log/jobs.log
+echo "Task completed successfully"
+EOF
+RUN chmod +x /app/job.sh
+
+# Set up cron job via /crons volume
+# Users can mount cron jobs here at runtime
+RUN mkdir -p /crons
+
+# Create log file with proper permissions
+RUN mkdir -p /var/log && \
+    touch /var/log/jobs.log && \
+    chmod 666 /var/log/jobs.log
+
+# Copy healthcheck script
+COPY healthcheck-cron.sh /healthcheck.sh
+RUN chmod +x /healthcheck.sh
+
+# nosemgrep: dockerfile.security.missing-user.missing-user
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD /healthcheck.sh
+
+# Volumes for cron configurations and logs
+VOLUME ["/crons", "/var/log"]
+
+# Example: To use cron jobs at runtime:
+# 1. Create cron files:
+#    mkdir -p ./my-crons
+#    echo "*/1 * * * * /app/job.sh" > ./my-crons/task.sh
+#    echo "TZ=Asia/Kolkata" > ./my-crons/15min.env
+# 
+# 2. Run with volume:
+#    docker run -v ./my-crons:/crons --name cron my-cron-app
+#
+# The base image will automatically load cron jobs from /crons directory
+
+# The base image will automatically:
+# 1. Start the cron daemon (crond)
+# 2. Load cron jobs from /crons directory if present
+# 3. Supervise the cron process with S6

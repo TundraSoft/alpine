@@ -64,7 +64,14 @@ RUN set -eux; \
 
 FROM scratch
 
-LABEL maintainer="Abhinav A V <36784+abhai2k@users.noreply.github.com>"
+LABEL maintainer="Abhinav A V <36784+abhai2k@users.noreply.github.com>" \
+      org.opencontainers.image.title="Alpine Linux with S6 Overlay" \
+      org.opencontainers.image.description="Lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities" \
+      org.opencontainers.image.vendor="TundraSoft" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.url="https://github.com/TundraSoft/alpine" \
+      org.opencontainers.image.documentation="https://github.com/TundraSoft/alpine/blob/main/README.md" \
+      org.opencontainers.image.source="https://github.com/TundraSoft/alpine.git"
 
 ARG S6_VERSION \
     ALPINE_BRANCH \
@@ -92,5 +99,9 @@ RUN set -eux; \
   adduser -DH -s /sbin/nologin -u ${PUID} tundra -G tundra;
 
 COPY /rootfs /
+
+# nosemgrep: dockerfile.security.missing-user.missing-user
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD /usr/bin/healthcheck.sh
 
 ENTRYPOINT ["/init"]
