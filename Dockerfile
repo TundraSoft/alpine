@@ -1,5 +1,5 @@
 ARG S6_VERSION=3.1.6.2 \
-  ALPINE_BRANCH=v3.19
+  ALPINE_BRANCH=v3.23
 
 FROM alpine:latest AS src
 

@@ -210,8 +210,8 @@ jobs:
       with:
         context: .
         push: true
-        #,linux/arm/v7
-        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        # Edge Alpine has QEMU trigger issues on arm platforms, only build edge on amd64
+        platforms: ${{ matrix.alpine-branch == 'edge' && 'linux/amd64' || 'linux/amd64,linux/arm64,linux/arm/v7' }}
         provenance: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
