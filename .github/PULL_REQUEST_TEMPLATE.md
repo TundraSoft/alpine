@@ -1,8 +1,5 @@
 ## Description:
-<!--- Describe your changes in detail -->
-
-## Issues
-<!-- Mention issues being closed by this PR -->
+<!--- Describe your changes in detail along with issues linked or related to this PR -->
 
 ------------------------------
 
