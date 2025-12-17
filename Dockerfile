@@ -100,9 +100,11 @@ RUN set -eux; \
 
 COPY /rootfs /
 
-USER tundra
+# Copy healthcheck script
+COPY rootfs/healthcheck.sh /healthcheck.sh
+RUN chmod +x /healthcheck.sh
+
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD ps aux | grep -q '[s]6-svscan' || exit 1
-USER root
+  CMD /healthcheck.sh
 
 ENTRYPOINT ["/init"]

@@ -34,11 +34,12 @@ RUN mkdir -p /var/log && \
     touch /var/log/jobs.log && \
     chmod 666 /var/log/jobs.log
 
-USER tundra
-# Health check: verify S6 supervisor and crond are running
+# Copy healthcheck script
+COPY healthcheck-cron.sh /healthcheck.sh
+RUN chmod +x /healthcheck.sh
+
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD ps aux | grep -q '[s]6-svscan' || exit 1
-USER root
+  CMD /healthcheck.sh
 
 # Volumes for cron configurations and logs
 VOLUME ["/crons", "/var/log"]
