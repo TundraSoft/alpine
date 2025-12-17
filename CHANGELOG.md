@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2025-12-17]
+
+### Fixed
+- fix(workflow): Remove codeql ([#29](https://github.com/TundraSoft/alpine/pull/29)) by @abhai2k
+
 ---
 
 ## [2025-07-11]
