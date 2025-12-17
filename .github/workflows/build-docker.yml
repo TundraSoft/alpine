@@ -241,7 +241,7 @@ jobs:
   # Lets do a few chores
   update-readme:
     needs: [setup, build]
-    if: github.ref_name == github.event.repository.default_branch
+    if: github.ref_name == github.event.repository.default_branch || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -253,10 +253,6 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.9'
-      
-      - name: Install Python dependencies
-        run: |
-          pip install -r .github/scripts/requirements.txt
       
       - name: Update README with new tags
         run: |
@@ -295,69 +291,46 @@ jobs:
       #       '${{ needs.setup.outputs.latest-s6-version }}' \
       #       'description:DESCRIPTION-START,DESCRIPTION-END;env-vars:ENV-VARS-START,ENV-VARS-END;build-args:BUILD-ARGS-START,BUILD-ARGS-END'
       
-      - name: Update CHANGELOG with build info and PR commits
+      - name: Update CHANGELOG from PR (on pull_request merge)
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
-          # Get commit messages for changelog
-          CHANGELOG_ENTRY=""
+          echo "📝 Processing merged PR for changelog..."
           
-          # Extract Alpine versions that were built
-          ALPINE_BRANCHES='${{ needs.setup.outputs.alpine-branches }}'
-          BRANCHES=$(echo "$ALPINE_BRANCHES" | jq -r '.[]' | grep -v edge | head -1)
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          REPO="${{ github.repository }}"
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
           
-          if [ -n "$BRANCHES" ]; then
-            # Get the version for the first branch built
-            VERSION=$(curl -s "https://cz.alpinelinux.org/alpine/${BRANCHES}/releases/x86_64/latest-releases.yaml" | awk '/version:/ {print $2; exit}')
+          echo "PR Title: $PR_TITLE"
+          echo "PR Number: $PR_NUMBER"
+          echo "PR Author: $PR_AUTHOR"
+          echo "Processing all commits from PR..."
+          
+          # Call the Python script to update changelog with all PR commits
+          python .github/scripts/update_changelog.py CHANGELOG.md "$PR_TITLE" "$PR_NUMBER" "$REPO" "$PR_AUTHOR" "$BASE_SHA" "$HEAD_SHA"
+      
+      - name: Update CHANGELOG from commits (on main branch push)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "📝 Processing commits for changelog..."
+          
+          # Get the last commit message from the push
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          COMMIT_HASH=$(git log -1 --pretty=%h)
+          COMMIT_AUTHOR=$(git log -1 --pretty=%an | sed 's/ /_/g')
+          
+          # Only process if commit message contains conventional commit prefix
+          if echo "$COMMIT_MSG" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|chore|security)'; then
+            echo "Processing commit: $COMMIT_MSG"
             
-            if [ -n "$VERSION" ]; then
-              # Check if this version already exists in CHANGELOG
-              if ! grep -q "Alpine.*${VERSION}" CHANGELOG.md 2>/dev/null; then
-                CHANGELOG_ENTRY="- Build with Alpine ${VERSION} and S6 ${{ needs.setup.outputs.latest-s6-version }}"
-              fi
-            fi
-          fi
-          
-          # Extract commits from PR if triggered by pull_request event
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "📝 Processing PR commits for changelog..."
-            # Get commits from the PR
-            COMMITS=$(git log ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} --pretty=%B 2>/dev/null || true)
-            if [ -n "$COMMITS" ]; then
-              # Parse commit messages and add to changelog
-              echo "$COMMITS" | grep -E '^(feat|fix|docs|style|refactor|perf|test|chore):' | sed 's/^/- /' >> changelog_entries.txt 2>/dev/null || true
-            fi
-          fi
-          
-          # Get last 5 commits on push events
-          if [ "${{ github.event_name }}" = "push" ]; then
-            COMMITS=$(git log -5 --pretty=%B)
-            if [ -n "$COMMITS" ]; then
-              echo "$COMMITS" | grep -E '^(feat|fix|docs|style|refactor|perf|test|chore):' | sed 's/^/- /' >> changelog_entries.txt 2>/dev/null || true
-            fi
-          fi
-          
-          # Merge all changelog entries and update CHANGELOG.md
-          if [ -f changelog_entries.txt ] || [ -n "$CHANGELOG_ENTRY" ]; then
-            # Create combined changelog entry
-            COMBINED_ENTRY=""
-            if [ -n "$CHANGELOG_ENTRY" ]; then
-              COMBINED_ENTRY="$CHANGELOG_ENTRY"
-            fi
-            if [ -f changelog_entries.txt ]; then
-              COMMIT_LINES=$(cat changelog_entries.txt | sort -u)
-              if [ -n "$COMBINED_ENTRY" ]; then
-                COMBINED_ENTRY="$COMBINED_ENTRY"$'\n'"$COMMIT_LINES"
-              else
-                COMBINED_ENTRY="$COMMIT_LINES"
-              fi
-            fi
+            # For commits, we need to extract the message differently
+            COMMIT_TITLE=$(echo "$COMMIT_MSG" | head -1)
+            REPO="${{ github.repository }}"
             
-            # Add to CHANGELOG under [Unreleased]
-            if [ -n "$COMBINED_ENTRY" ]; then
-              sed -i '/^## \[Unreleased\]/a \\n### Changed\n'"$COMBINED_ENTRY" CHANGELOG.md
-              echo "✅ Updated CHANGELOG with entries"
-            fi
-            
-            rm -f changelog_entries.txt
+            # Create a changelog entry for the commit
+            python .github/scripts/update_changelog.py CHANGELOG.md "$COMMIT_TITLE" "0" "$REPO" "$COMMIT_AUTHOR"
           fi
 
       - name: Commit and push changes
