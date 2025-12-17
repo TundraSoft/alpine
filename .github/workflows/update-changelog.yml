@@ -1,0 +1,152 @@
+name: Update Changelog
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  update-changelog:
+    name: Update Changelog on PR Merge
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract PR Information
+        id: pr-info
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          COMMIT_MESSAGES="${{ github.event.pull_request.body }}"
+          
+          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+          echo "pr_title=${PR_TITLE}" >> $GITHUB_OUTPUT
+          echo "pr_author=${PR_AUTHOR}" >> $GITHUB_OUTPUT
+          echo "pr_url=${PR_URL}" >> $GITHUB_OUTPUT
+          
+          # Extract the date in YYYY-MM-DD format
+          DATE=$(date -u +'%Y-%m-%d')
+          echo "date=${DATE}" >> $GITHUB_OUTPUT
+
+      - name: Categorize PR Changes
+        id: categorize
+        env:
+          PR_TITLE: ${{ steps.pr-info.outputs.pr_title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          TITLE_LOWER=$(echo "$PR_TITLE" | tr '[:upper:]' '[:lower:]')
+          BODY_LOWER=$(echo "$PR_BODY" | tr '[:upper:]' '[:lower:]')
+          
+          # Default category
+          CATEGORY="Changed"
+          
+          # Categorize based on keywords in title or body
+          if [[ "$TITLE_LOWER" =~ ^feat|feature|add|new ]]; then
+            CATEGORY="Added"
+          elif [[ "$TITLE_LOWER" =~ ^fix|bug|issue ]]; then
+            CATEGORY="Fixed"
+          elif [[ "$TITLE_LOWER" =~ ^security|cve|vulnerability ]]; then
+            CATEGORY="Security"
+          elif [[ "$TITLE_LOWER" =~ ^docs|documentation|readme|changelog ]]; then
+            CATEGORY="Documentation"
+          elif [[ "$TITLE_LOWER" =~ ^chore|refactor|perf|performance ]]; then
+            CATEGORY="Changed"
+          elif [[ "$TITLE_LOWER" =~ ^deprecat ]]; then
+            CATEGORY="Deprecated"
+          elif [[ "$TITLE_LOWER" =~ ^remov ]]; then
+            CATEGORY="Removed"
+          fi
+          
+          echo "category=${CATEGORY}" >> $GITHUB_OUTPUT
+
+      - name: Check if Changelog Entry Already Exists
+        id: check-duplicate
+        run: |
+          PR_NUMBER=${{ steps.pr-info.outputs.pr_number }}
+          DATE=${{ steps.pr-info.outputs.date }}
+          
+          # Check if PR number is already in changelog
+          if grep -q "#${PR_NUMBER}" CHANGELOG.md; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "::warning::PR #${PR_NUMBER} already exists in CHANGELOG"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Changelog
+        if: steps.check-duplicate.outputs.exists == 'false'
+        env:
+          DATE: ${{ steps.pr-info.outputs.date }}
+          CATEGORY: ${{ steps.categorize.outputs.category }}
+          PR_TITLE: ${{ steps.pr-info.outputs.pr_title }}
+          PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
+          PR_URL: ${{ steps.pr-info.outputs.pr_url }}
+          PR_AUTHOR: ${{ steps.pr-info.outputs.pr_author }}
+        run: |
+          # Read the original changelog
+          ORIGINAL_CHANGELOG=$(cat CHANGELOG.md)
+          
+          # Check if date section exists
+          if grep -q "## \[${DATE}\]" CHANGELOG.md; then
+            # Date section exists, check if category exists
+            if grep -A 100 "## \[${DATE}\]" CHANGELOG.md | grep -q "^### ${CATEGORY}"; then
+              # Category exists, append to it
+              # Use a temp file to handle the update
+              sed -i "/^### ${CATEGORY}$/a - ${PR_TITLE} ([#${PR_NUMBER}](${PR_URL})) by @${PR_AUTHOR}" CHANGELOG.md
+            else
+              # Category doesn't exist, add it before next category or before other dates
+              # Find the line number of the date section
+              LINE_NUM=$(grep -n "## \[${DATE}\]" CHANGELOG.md | cut -d: -f1)
+              # Insert the category after the date heading
+              sed -i "${LINE_NUM}a\\n### ${CATEGORY}\n- ${PR_TITLE} ([#${PR_NUMBER}](${PR_URL})) by @${PR_AUTHOR}" CHANGELOG.md
+            fi
+          else
+            # Date section doesn't exist, create it after [Unreleased]
+            # Find the [Unreleased] section and the next --- after it
+            UNRELEASED_LINE=$(grep -n "^## \[Unreleased\]" CHANGELOG.md | cut -d: -f1)
+            INSERT_AFTER=$((UNRELEASED_LINE + 1))
+            # Find the next --- after Unreleased
+            while IFS= read -r line; do
+              if [[ "$line" =~ ^---$ ]]; then
+                break
+              fi
+              INSERT_AFTER=$((INSERT_AFTER + 1))
+            done < <(tail -n +$((UNRELEASED_LINE + 1)) CHANGELOG.md)
+            
+            # Create the new date section
+            NEW_SECTION="## [${DATE}]\\n\\n### ${CATEGORY}\\n- ${PR_TITLE} ([#${PR_NUMBER}](${PR_URL})) by @${PR_AUTHOR}\\n"
+            
+            # Insert the new section
+            sed -i "${INSERT_AFTER}i ${NEW_SECTION}" CHANGELOG.md
+          fi
+
+      - name: Commit and Push Changes
+        if: steps.check-duplicate.outputs.exists == 'false'
+        env:
+          PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
+          DATE: ${{ steps.pr-info.outputs.date }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if there are actual changes
+          if ! git diff --quiet CHANGELOG.md; then
+            git add CHANGELOG.md
+            git commit -m "chore: update changelog for ${DATE} [skip ci]"
+            git push
+            echo "✅ Changelog updated successfully for PR #${PR_NUMBER}"
+          else
+            echo "ℹ️  No changes made to changelog"
+          fi
