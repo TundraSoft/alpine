@@ -254,6 +254,10 @@ jobs:
         with:
           python-version: '3.9'
       
+      - name: Install dependencies
+        run: |
+          pip install -r .github/scripts/requirements.txt
+      
       - name: Update README with new tags
         run: |
           # Use the Alpine branches that were actually built
