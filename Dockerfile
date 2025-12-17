@@ -100,8 +100,4 @@ RUN set -eux; \
 
 COPY /rootfs /
 
-USER tundra
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["/usr/bin/healthcheck.sh"]
-
 ENTRYPOINT ["/init"]
