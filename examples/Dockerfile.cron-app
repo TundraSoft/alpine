@@ -34,6 +34,14 @@ RUN mkdir -p /var/log && \
     touch /var/log/jobs.log && \
     chmod 666 /var/log/jobs.log
 
+# Copy healthcheck script
+COPY healthcheck-cron.sh /healthcheck.sh
+RUN chmod +x /healthcheck.sh
+
+# semgrep ignore=dockerfile.security.missing-user.missing-user
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD /healthcheck.sh
+
 # Volumes for cron configurations and logs
 VOLUME ["/crons", "/var/log"]
 

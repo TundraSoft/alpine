@@ -47,6 +47,10 @@ RUN mkdir -p /var/www && \
 COPY healthcheck-web.sh /healthcheck.sh
 RUN chmod +x /healthcheck.sh
 
+# semgrep ignore=dockerfile.security.missing-user.missing-user
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=2 \
+  CMD /healthcheck.sh
+
 EXPOSE 8080
 
 # The base image entrypoint (/init) will automatically start all services
