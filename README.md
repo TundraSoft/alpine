@@ -70,8 +70,6 @@ docker run -d \
 ## 🏷️ Available Tags
 
 <!-- TAGS-START -->
-## Tags
-
 | Version | Tags |
 |---------|------|
 | [latest](https://hub.docker.com/r/tundrasoft/alpine/tags?name=latest) | Latest stable release |

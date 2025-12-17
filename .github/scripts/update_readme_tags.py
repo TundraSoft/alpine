@@ -81,8 +81,6 @@ def generate_tags_table(tags_dict: Dict[str, Set[str]], repo_name: str) -> str:
     
     if not tags_dict:
         return f"""{TAGS_START_MARKER}
-## Tags
-
 | Version | Tags |
 |---------|------|
 | [latest](https://hub.docker.com/r/{repo_name_lower}/tags?name=latest) | Latest stable release |
@@ -95,8 +93,6 @@ def generate_tags_table(tags_dict: Dict[str, Set[str]], repo_name: str) -> str:
     
     table_lines = [
         TAGS_START_MARKER,
-        "## Tags",
-        "",
         "| Version | Tags |",
         "|---------|------|",
         f"| [latest](https://hub.docker.com/r/{repo_name_lower}/tags?name=latest) | Latest stable release |",
