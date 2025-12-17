@@ -280,15 +280,38 @@ jobs:
       #       '${{ needs.setup.outputs.latest-s6-version }}' \
       #       'description:DESCRIPTION-START,DESCRIPTION-END;env-vars:ENV-VARS-START,ENV-VARS-END;build-args:BUILD-ARGS-START,BUILD-ARGS-END'
       
+      - name: Update CHANGELOG with build info
+        run: |
+          # Get the last commit message to extract build info
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          
+          # Extract Alpine versions that were built
+          ALPINE_BRANCHES='${{ needs.setup.outputs.alpine-branches }}'
+          BRANCHES=$(echo "$ALPINE_BRANCHES" | jq -r '.[]' | grep -v edge | head -1)
+          
+          if [ -n "$BRANCHES" ]; then
+            # Get the version for the first branch built
+            VERSION=$(curl -s "https://cz.alpinelinux.org/alpine/${BRANCHES}/releases/x86_64/latest-releases.yaml" | awk '/version:/ {print $2; exit}')
+            
+            if [ -n "$VERSION" ]; then
+              # Check if this version already exists in CHANGELOG
+              if ! grep -q "Alpine.*${VERSION}" CHANGELOG.md 2>/dev/null; then
+                # Add entry to CHANGELOG under [Unreleased]
+                sed -i '/^## \[Unreleased\]/a \\n### Changed\n- Build with Alpine '"${VERSION}"' and S6 '"${{ needs.setup.outputs.latest-s6-version }}"'' CHANGELOG.md
+                echo "✅ Updated CHANGELOG with Alpine ${VERSION}"
+              fi
+            fi
+          fi
+
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add README.md
+          git add README.md CHANGELOG.md
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore: Update README.md with latest tags [skip ci] [skip changelog]"
+            git commit -m "chore: Update README and CHANGELOG [skip ci]"
             git push origin ${{ github.ref_name }}
           fi
   
