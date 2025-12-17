@@ -38,8 +38,8 @@ def get_commits_from_pr(base_sha, head_sha):
     """Extract all commit messages from a PR."""
     commits = []
     try:
-        cmd = f"git log {base_sha}..{head_sha} --pretty=%B%n---END---"
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        cmd = ["git", "log", f"{base_sha}..{head_sha}", "--pretty=%B%n---END---"]
+        result = subprocess.run(cmd, shell=False, capture_output=True, text=True)
         if result.returncode == 0:
             messages = result.stdout.split('---END---')
             for msg in messages:
