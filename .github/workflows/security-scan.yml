@@ -193,7 +193,7 @@ jobs:
             -t grype-scan:latest .
 
       - name: Run Grype vulnerability scanner
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v7
         id: grype
         with:
           image: "grype-scan:latest"
