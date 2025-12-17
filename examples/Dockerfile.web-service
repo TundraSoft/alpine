@@ -8,6 +8,7 @@
 
 FROM tundrasoft/alpine:latest
 
+USER root
 # Install utilities
 RUN apk add --no-cache \
     curl \
@@ -46,6 +47,8 @@ RUN mkdir -p /var/www && \
 # Copy healthcheck script
 COPY healthcheck-web.sh /healthcheck.sh
 RUN chmod +x /healthcheck.sh
+
+USER tundra
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=2 \
   CMD /healthcheck.sh

@@ -9,10 +9,13 @@
 
 FROM tundrasoft/alpine:latest
 
+USER root
+
 # Install additional utilities
 RUN apk add --no-cache \
     curl
 
+USER tundra
 # Create app directory
 WORKDIR /app
 

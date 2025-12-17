@@ -100,11 +100,8 @@ RUN set -eux; \
 
 COPY /rootfs /
 
-# Copy healthcheck script
-COPY rootfs/healthcheck.sh /healthcheck.sh
-RUN chmod +x /healthcheck.sh
+USER tundra
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD /healthcheck.sh
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["/usr/bin/healthcheck.sh"]
 
 ENTRYPOINT ["/init"]
