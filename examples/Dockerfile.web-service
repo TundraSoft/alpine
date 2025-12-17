@@ -45,7 +45,7 @@ RUN mkdir -p /var/www && \
 
 # Health check for the HTTP server
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=2 \
-  CMD curl -f http://localhost:8080/ || exit 1
+  CMD curl -s http://localhost:8080/ > /dev/null || exit 1
 
 EXPOSE 8080
 

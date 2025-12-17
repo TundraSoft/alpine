@@ -101,7 +101,6 @@ RUN set -eux; \
 COPY /rootfs /
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD s6-svstat /run/service/* > /dev/null 2>&1 && \
-      [ "$(ps aux | grep -v grep | grep s6 | wc -l)" -gt 1 ] || exit 1
+  CMD ps aux | grep -q '[s]6-svscan' || exit 1
 
 ENTRYPOINT ["/init"]
