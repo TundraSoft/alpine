@@ -3,7 +3,7 @@
 
 ------------------------------
 
- - [ ] I confirm that i have tested the changes done in this PR and also 
+ - [ ] I confirm that I have tested the changes done in this PR and also 
  confirm that I have stuck to the coding guidelines as specified in 
 
 ------------------------------
