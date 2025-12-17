@@ -40,7 +40,7 @@ RUN chmod +x /healthcheck.sh
 
 # semgrep ignore=dockerfile.security.missing-user.missing-user
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD /healthcheck.sh
+  CMD /healthcheck.sh # nosemgrep: dockerfile.security.missing-user.missing-user
 
 # Volumes for cron configurations and logs
 VOLUME ["/crons", "/var/log"]

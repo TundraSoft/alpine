@@ -100,8 +100,7 @@ RUN set -eux; \
 
 COPY /rootfs /
 
-# semgrep ignore=dockerfile.security.missing-user.missing-user
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD /usr/bin/healthcheck.sh
+  CMD /usr/bin/healthcheck.sh # nosemgrep: dockerfile.security.missing-user.missing-user
 
 ENTRYPOINT ["/init"]
