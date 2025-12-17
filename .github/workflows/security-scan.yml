@@ -99,25 +99,25 @@ jobs:
   # Code Security Scanning
   # Disabled: CodeQL is for traditional code (JS, Python, etc.)
   # This project uses Dockerfile/Shell - handled by Semgrep instead
-  # code-scan:
-  #   name: Code Security Scan
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     actions: read
-  #     contents: read
-  #     security-events: write
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Initialize CodeQL
-  #       uses: github/codeql-action/init@v3
-  #
-  #     - name: Autobuild
-  #       uses: github/codeql-action/autobuild@v3
-  #
-  #     - name: Perform CodeQL Analysis
-  #       uses: github/codeql-action/analyze@v3
+  code-scan:
+    name: Code Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+  
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+  
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+  
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
 
   # Secret Scanning (Free) - Also runs in build workflow as backup
   secret-scan:
@@ -210,7 +210,7 @@ jobs:
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
-    needs: [setup, container-scan, dependency-scan, secret-scan, sast-scan, grype-scan]
+    needs: [setup, container-scan, dependency-scan, secret-scan, sast-scan, grype-scan, code-scan]
     if: always()
     steps:
       - name: Security Scan Summary
