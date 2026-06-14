@@ -75,6 +75,7 @@ docker run -d \
 |---------|------|
 | [latest](https://hub.docker.com/r/tundrasoft/alpine/tags?name=latest) | Latest stable release |
 | [edge](https://hub.docker.com/r/tundrasoft/alpine/tags?name=edge) | Edge/development version |
+| [3.24](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.24) | [3.24.1](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.24.1) |
 | [3.23](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.23) | [3.23.4](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.23.4), [3.23.3](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.23.3), [3.23.2](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.23.2) |
 | [3.22](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22) | [3.22.4](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.4), [3.22.3](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.3), [3.22.2](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.2), [3.22.1](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.1), [3.22.0](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.22.0) |
 | [3.21](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21) | [3.21.7](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.7), [3.21.6](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.6), [3.21.5](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.5), [3.21.4](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.4), [3.21.3](https://hub.docker.com/r/tundrasoft/alpine/tags?name=3.21.3) |
