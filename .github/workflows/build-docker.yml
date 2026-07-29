@@ -156,7 +156,7 @@ jobs:
     - 
       name: Build Test Image
       id: build-image
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: .
         load: true
@@ -195,7 +195,7 @@ jobs:
     - 
       name: Build and Push
       id: build-push
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: .
         push: true
