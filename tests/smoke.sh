@@ -61,5 +61,10 @@ run "$IMG" /usr/bin/healthcheck.sh \
   || fail "healthcheck.sh returned non-zero while s6 was running"
 pass "healthcheck reports healthy"
 
+# 8. /crons exists and is writable (downstream drops crontab files here)
+run "$IMG" sh -c 'touch /crons/.smoke-write && rm -f /crons/.smoke-write' \
+  || fail "/crons is not writable"
+pass "/crons is writable"
+
 echo
 pass "all smoke tests passed for $IMG"
