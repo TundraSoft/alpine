@@ -222,6 +222,21 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "⚠️ Actual sizes available in Docker Hub: https://hub.docker.com/r/tundrasoft/alpine/tags" >> $GITHUB_STEP_SUMMARY
   
+  # Single stable-named check to require in branch protection. The matrix
+  # 'build (vX)' names churn as Alpine versions roll; this passes iff the whole
+  # build matrix passed. `!cancelled()` ensures it always reports (never blocks
+  # a PR as "skipped").
+  ci-gate:
+    name: ci-gate
+    needs: build
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the build matrix to have passed
+        run: |
+          echo "build matrix result: ${{ needs.build.result }}"
+          [ "${{ needs.build.result }}" = "failure" ] && exit 1 || exit 0
+
   # Lets do a few chores
   update-readme:
     needs: [setup, build]
