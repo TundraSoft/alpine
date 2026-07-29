@@ -10,11 +10,11 @@ ARG S6_VERSION \
     TARGETVARIANT
 
 ENV PUID=1000 \
-    PGID=1000 \ 
+    PGID=1000 \
     TZ="UTC" \
-    S6_GLOBAL_PATH="/command:/usr/bin:/bin:/usr/sbin" \
+    S6_GLOBAL_PATH="/command:/usr/local/bin:/usr/bin:/bin:/usr/sbin" \
     S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
-    PATH="/scripts/bin:$PATH" \
+    PATH="/scripts:$PATH" \
     LANG=C.UTF-8
 
 WORKDIR /install
@@ -35,22 +35,28 @@ RUN set -eux; \
     "linux/arm/v6") export ALPINE_ARCH="armhf"; export S6_ARCH="armhf" ;; \
     *) echo "Unsupported platform: ${TARGETPLATFORM}" ; exit 1 ;; \
     esac; \
-  # Download Alpine minirootfs with dynamically determined version
+  # Resolve the Alpine minirootfs filename (edge's is only known from the index)
+  cd /tmp; \
   if [ "${ALPINE_BRANCH}" = "edge" ]; then \
-    wget -qO- "https://dl-cdn.alpinelinux.org/alpine/edge/releases/${ALPINE_ARCH}/latest-releases.yaml" | \
-    awk '/file:.*minirootfs.*\.tar\.gz/ {print "https://dl-cdn.alpinelinux.org/alpine/edge/releases/'${ALPINE_ARCH}'/" $2}' | \
-    head -1 | xargs wget -qO- | tar -xz; \
+    ALPINE_BASE="https://dl-cdn.alpinelinux.org/alpine/edge/releases/${ALPINE_ARCH}"; \
+    ALPINE_TARBALL=$(wget -qO- "${ALPINE_BASE}/latest-releases.yaml" | awk '/file:.*minirootfs.*\.tar\.gz/ {print $2; exit}'); \
   else \
-    wget -qO- "https://dl-cdn.alpinelinux.org/alpine/${ALPINE_BRANCH}/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz" | tar -xz; \
+    ALPINE_BASE="https://dl-cdn.alpinelinux.org/alpine/${ALPINE_BRANCH}/releases/${ALPINE_ARCH}"; \
+    ALPINE_TARBALL="alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz"; \
   fi; \
-  wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-noarch.tar.xz \
-        https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-symlinks-noarch.tar.xz \
-        https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/syslogd-overlay-noarch.tar.xz \
-        https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-${S6_ARCH}.tar.xz -P /tmp; \
-  tar -C /install/ -Jxpf /tmp/s6-overlay-noarch.tar.xz; \
-  tar -C /install/ -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz; \
-  tar -C /install/ -Jxpf /tmp/syslogd-overlay-noarch.tar.xz; \
-  tar -C /install/ -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz; \
+  S6_URL="https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}"; \
+  # Download each tarball with its .sha256 companion, verify integrity, then extract
+  wget "${ALPINE_BASE}/${ALPINE_TARBALL}" "${ALPINE_BASE}/${ALPINE_TARBALL}.sha256" \
+       "${S6_URL}/s6-overlay-noarch.tar.xz" "${S6_URL}/s6-overlay-noarch.tar.xz.sha256" \
+       "${S6_URL}/s6-overlay-symlinks-noarch.tar.xz" "${S6_URL}/s6-overlay-symlinks-noarch.tar.xz.sha256" \
+       "${S6_URL}/syslogd-overlay-noarch.tar.xz" "${S6_URL}/syslogd-overlay-noarch.tar.xz.sha256" \
+       "${S6_URL}/s6-overlay-${S6_ARCH}.tar.xz" "${S6_URL}/s6-overlay-${S6_ARCH}.tar.xz.sha256"; \
+  sha256sum -c ./*.sha256; \
+  tar -C /install/ -xzpf "${ALPINE_TARBALL}"; \
+  tar -C /install/ -Jxpf s6-overlay-noarch.tar.xz; \
+  tar -C /install/ -Jxpf s6-overlay-${S6_ARCH}.tar.xz; \
+  tar -C /install/ -Jxpf syslogd-overlay-noarch.tar.xz; \
+  tar -C /install/ -Jxpf s6-overlay-symlinks-noarch.tar.xz; \
   rmdir -p /home \
          /media/cdrom \
          /media/floppy \
@@ -80,9 +86,9 @@ ARG S6_VERSION \
     TARGETVARIANT
 
 ENV PUID=1000 \
-    PGID=1000 \ 
+    PGID=1000 \
     TZ="UTC" \
-    S6_GLOBAL_PATH="/command:/usr/bin:/bin:/usr/sbin" \
+    S6_GLOBAL_PATH="/command:/usr/local/bin:/usr/bin:/bin:/usr/sbin" \
     S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
     PATH="/scripts:$PATH" \
     LANG=C.UTF-8
