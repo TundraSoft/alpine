@@ -41,15 +41,13 @@ body:
       label: Describe Feature
       description: Describe the new feature
       placeholder: What does this feature provide
-      # value: "A bug happened!"
     validations:
       required: true
   - type: textarea
     id: feature-justification
     attributes:
       label: Justify your Feature
-      description: How will this feature help? What are the benifies
-      # value: "A bug happened!"
+      description: How will this feature help? What are the benefits
     validations:
       required: true
   - type: textarea
@@ -57,6 +55,5 @@ body:
     attributes:
       label: Additional Information
       description: How do we implement the change? Any documentation or reference material will help.
-      # value: "A bug happened!"
     validations:
       required: false
