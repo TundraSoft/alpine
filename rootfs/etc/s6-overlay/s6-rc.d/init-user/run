@@ -1,8 +1,8 @@
-#!/usr/bin/with-contenv sh
+#!/command/with-contenv sh
 
-PGID=${PUID:-1000}
-UNAME='tundra'
+PUID=${PUID:-1000}
 PGID=${PGID:-1000}
+UNAME='tundra'
 GNAME='tundra'
 
 if [ $PGID -ne 1000 ]; then
@@ -16,5 +16,5 @@ fi
 # setgroup /app
 setgroup /scripts
 
-# ensure all scripts inside /scripts/bin are executable
+# ensure all scripts inside /scripts are executable
 chmod +x /scripts/*
