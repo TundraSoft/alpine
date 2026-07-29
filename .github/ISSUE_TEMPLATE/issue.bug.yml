@@ -41,7 +41,6 @@ body:
       label: Current Behaviour
       description: Explain what the current behaviour is
       placeholder: Tell us what you see!
-      # value: "A bug happened!"
     validations:
       required: true
   - type: textarea
@@ -50,7 +49,6 @@ body:
       label: Expected Behaviour
       description: What is actually expected to happen?
       placeholder: What do you expect to see?
-      # value: "A bug happened!"
     validations:
       required: false
   - type: textarea
@@ -59,7 +57,6 @@ body:
       label: Steps to reproduce
       description: How did we reproduce this?
       placeholder: Explain how we can reproduce this issue?
-      # value: "A bug happened!"
     validations:
       required: true
   - type: textarea
@@ -68,7 +65,6 @@ body:
       label: Container Config
       description: What is the container config?
       placeholder: Mention the ENV variables, or arguments used to build (if custom) etc
-      # value: "A bug happened!"
     validations:
       required: true
   - type: textarea
@@ -77,7 +73,6 @@ body:
       label: Logs
       description: Container Logs
       placeholder: Paste the output of logs. You can fetch this by running docker log <container-name>
-      # value: "A bug happened!"
     validations:
       required: true
   - type: textarea
@@ -86,6 +81,5 @@ body:
       label: Environment
       description: Mention the environment
       placeholder: Mention operating system, docker version etc.
-      # value: "A bug happened!"
     validations:
       required: false
