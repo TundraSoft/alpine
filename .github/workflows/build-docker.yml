@@ -149,9 +149,6 @@ jobs:
           type=semver,pattern={{major}},value=${{ steps.get-version.outputs.alpine-version }},enable=${{ matrix.alpine-branch != 'edge' && matrix.alpine-branch == needs.setup.outputs.latest-alpine-branch && github.ref_name == github.event.repository.default_branch }}
           # Edge version tags
           type=raw,value=edge,enable=${{ matrix.alpine-branch == 'edge' && github.ref_name == github.event.repository.default_branch }}
-          # Branch-prefixed tags for non-default branches
-          type=semver,prefix=${{ format('{0}-', github.ref_name)}},pattern={{version}},value=${{ steps.get-version.outputs.alpine-version }},enable=${{ matrix.alpine-branch != 'edge' && github.ref_name != github.event.repository.default_branch }}
-          type=raw,prefix=${{ format('{0}-', github.ref_name)}},value=edge,enable=${{ matrix.alpine-branch == 'edge' && github.ref_name != github.event.repository.default_branch }}
 
     - 
       name: Build Test Image
@@ -179,6 +176,7 @@ jobs:
     
     -
       name: Login to DockerHub
+      if: github.ref_name == github.event.repository.default_branch
       uses: docker/login-action@v4
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
@@ -186,6 +184,7 @@ jobs:
     
     -
       name: Login to GHCR
+      if: github.ref_name == github.event.repository.default_branch
       uses: docker/login-action@v4
       with:
         registry: ghcr.io
@@ -195,6 +194,7 @@ jobs:
     - 
       name: Build and Push
       id: build-push
+      if: github.ref_name == github.event.repository.default_branch
       uses: docker/build-push-action@v7
       with:
         context: .
