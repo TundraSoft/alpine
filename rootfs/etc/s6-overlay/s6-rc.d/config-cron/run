@@ -3,11 +3,8 @@
 # Make sure crontab dir exists
 mkdir -p /etc/crontabs
 
-# Create crontab file
-if [ ! -f /etc/crontabs/crontab ];
-then
-  touch /etc/crontabs/crontab
-fi
+# Create/reset the crontab file (truncate to avoid duplicate entries on restart)
+: > /etc/crontabs/crontab
 
 # Load the files
 for CronFiles in /crons/*

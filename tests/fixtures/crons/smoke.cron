@@ -1,0 +1,2 @@
+# Fixture used by tests/smoke.sh to verify /crons import at boot.
+*/5 * * * * echo smoke-cron-marker
