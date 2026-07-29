@@ -83,6 +83,20 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
+      # Hard gate: fail the build on HIGH/CRITICAL vulnerabilities that have a
+      # fix available. ignore-unfixed means we only fail when we are behind on
+      # patches (the stale-package case), not on CVEs with no upstream fix.
+      # Documented exceptions live in .trivyignore (with expiry dates).
+      - name: Fail on fixable HIGH/CRITICAL vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'security-scan:latest'
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
+          trivyignores: '.trivyignore'
+
   # Dependency Security Scanning (Free with Trivy)
   dependency-scan:
     name: Dependency Security Scan
