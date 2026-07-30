@@ -1,7 +1,7 @@
 # TundraSoft Alpine Base Image
 
 <!-- DESCRIPTION-START -->
-A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
+A lightweight, secure Alpine Linux base image with S6 overlay, cron, and envsubst pre-installed.
 <!-- DESCRIPTION-END -->
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/TundraSoft/alpine/build-docker.yml?event=push&logo=github&label=build)](https://github.com/TundraSoft/alpine/actions/workflows/build-docker.yml)
