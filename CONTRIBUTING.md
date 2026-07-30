@@ -1,33 +1,33 @@
-# 🤝 Contributing to TundraSoft Docker Images
+# Contributing to TundraSoft Docker Images
 
 Thank you for your interest in contributing to our Docker image projects! We welcome contributions from the community and appreciate your help in making our images better.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [🚀 Getting Started](#-getting-started)
-- [🔧 Development Setup](#-development-setup)
-- [📝 How to Contribute](#-how-to-contribute)
-- [🐛 Reporting Issues](#-reporting-issues)
-- [✨ Suggesting Features](#-suggesting-features)
-- [🔒 Security Issues](#-security-issues)
-- [📏 Code Standards](#-code-standards)
-- [🧪 Testing](#-testing)
-- [📚 Documentation](#-documentation)
-- [🎯 Pull Request Process](#-pull-request-process)
-- [📜 Code of Conduct](#-code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Setup](#development-setup)
+- [How to Contribute](#how-to-contribute)
+- [Reporting Issues](#reporting-issues)
+- [Suggesting Features](#suggesting-features)
+- [Security Issues](#security-issues)
+- [Code Standards](#code-standards)
+- [Testing](#testing)
+- [Documentation](#documentation)
+- [Pull Request Process](#pull-request-process)
+- [Code of Conduct](#code-of-conduct)
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- 🐳 **Docker** (latest stable version)
-- 🐙 **Git** for version control
-- 📝 **Basic knowledge** of Dockerfiles and containerization
-- 🧠 **Understanding** of the base technology (Alpine, Ubuntu, etc.)
+- **Docker** (latest stable version)
+- **Git** for version control
+- **Basic knowledge** of Dockerfiles and containerization
+- **Understanding** of the base technology (Alpine, Ubuntu, etc.)
 
 ### Quick Start
 
@@ -40,7 +40,7 @@ Thank you for your interest in contributing to our Docker image projects! We wel
 
 ---
 
-## 🔧 Development Setup
+## Development Setup
 
 ### Local Development
 
@@ -70,19 +70,19 @@ docker run --rm -it local-test
 
 ---
 
-## 📝 How to Contribute
+## How to Contribute
 
 ### Types of Contributions
 
 We welcome various types of contributions:
 
-- 🐛 **Bug fixes** - Fix issues in existing functionality
-- ✨ **Feature additions** - Add new capabilities
-- 📚 **Documentation** - Improve or add documentation
-- 🧪 **Tests** - Add or improve test coverage
-- 🔧 **Build improvements** - Optimize Dockerfiles or build process
-- 🔒 **Security** - Security enhancements and fixes
-- 🎨 **Cleanup** - Code cleanup, refactoring, or optimization
+- **Bug fixes** - Fix issues in existing functionality
+- **Feature additions** - Add new capabilities
+- **Documentation** - Improve or add documentation
+- **Tests** - Add or improve test coverage
+- **Build improvements** - Optimize Dockerfiles or build process
+- **Security** - Security enhancements and fixes
+- **Cleanup** - Code cleanup, refactoring, or optimization
 
 ### Workflow
 
@@ -96,13 +96,13 @@ We welcome various types of contributions:
 
 ---
 
-## 🐛 Reporting Issues
+## Reporting Issues
 
 ### Before Reporting
 
-- 🔍 **Search existing issues** to avoid duplicates
-- 🧪 **Test with latest version** to ensure issue persists
-- 📋 **Gather relevant information** (OS, Docker version, etc.)
+- **Search existing issues** to avoid duplicates
+- **Test with latest version** to ensure issue persists
+- **Gather relevant information** (OS, Docker version, etc.)
 
 ### Issue Template
 
@@ -127,7 +127,7 @@ When reporting issues, please include:
 
 **Actual Behavior**: What actually happens
 
-**Additional Context**: 
+**Additional Context**:
 - Error messages
 - Logs
 - Screenshots (if applicable)
@@ -135,14 +135,14 @@ When reporting issues, please include:
 
 ---
 
-## ✨ Suggesting Features
+## Suggesting Features
 
 ### Feature Requests
 
-- 🎯 **Be specific** about the use case
-- 🔍 **Explain the problem** the feature would solve
-- 💭 **Consider alternatives** and mention them
-- 🎨 **Provide examples** or mockups if applicable
+- **Be specific** about the use case
+- **Explain the problem** the feature would solve
+- **Consider alternatives** and mention them
+- **Provide examples** or mockups if applicable
 
 ### Enhancement Process
 
@@ -153,11 +153,11 @@ When reporting issues, please include:
 
 ---
 
-## 🔒 Security Issues
+## Security Issues
 
 ### Reporting Security Vulnerabilities
 
-🚨 **Do NOT open public issues for security vulnerabilities!**
+ **Do NOT open public issues for security vulnerabilities!**
 
 Instead:
 - Use [GitHub's private vulnerability reporting](../../security/advisories/new)
@@ -175,7 +175,7 @@ Instead:
 
 ---
 
-## 📏 Code Standards
+## Code Standards
 
 ### Dockerfile Guidelines
 
@@ -229,12 +229,12 @@ readonly CONFIG_FILE="/etc/myapp/config.yml"
 # Returns: 0 on success, 1 on failure
 function do_something() {
     local input="$1"
-    
+
     if [[ -z "$input" ]]; then
         echo "Error: Input parameter required" >&2
         return 1
     fi
-    
+
     echo "Processing: $input"
     return 0
 }
@@ -248,19 +248,19 @@ fi
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Required Tests
 
 Before submitting PRs, ensure:
 
-- ✅ **Image builds successfully** on multiple architectures
-- ✅ **Container starts and runs** without errors
-- ✅ **All services function** as expected
-- ✅ **Environment variables** work correctly
-- ✅ **Volume mounts** function properly
-- ✅ **Network connectivity** works as designed
-- ✅ **Security scans** pass without critical issues
+- **Image builds successfully** on multiple architectures
+- **Container starts and runs** without errors
+- **All services function** as expected
+- **Environment variables** work correctly
+- **Volume mounts** function properly
+- **Network connectivity** works as designed
+- **Security scans** pass without critical issues
 
 ### Testing Commands
 
@@ -286,16 +286,16 @@ docker buildx build --platform linux/amd64,linux/arm64 .
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 ### Documentation Requirements
 
-- 📝 **Update README.md** for new features
-- 📋 **Update CHANGELOG.md** with changes
-- 🏷️ **Update version tags** in documentation
-- 📖 **Add inline comments** for complex logic
-- 🔧 **Document new environment variables**
-- 📁 **Update docker-compose examples** if applicable
+- **Update README.md** for new features
+- **Update CHANGELOG.md** with changes
+- **Update version tags** in documentation
+- **Add inline comments** for complex logic
+- **Document new environment variables**
+- **Update docker-compose examples** if applicable
 
 ### Documentation Style
 
@@ -307,42 +307,42 @@ docker buildx build --platform linux/amd64,linux/arm64 .
 
 ---
 
-## 🎯 Pull Request Process
+## Pull Request Process
 
 ### Before Submitting
 
-- ✅ Ensure your fork is up to date with upstream
-- ✅ Rebase your branch on latest main
-- ✅ Test thoroughly on your local environment
-- ✅ Update documentation as needed
-- ✅ Ensure CI/CD checks pass
+- Ensure your fork is up to date with upstream
+- Rebase your branch on latest main
+- Test thoroughly on your local environment
+- Update documentation as needed
+- Ensure CI/CD checks pass
 
 ### PR Description Template
 
 ```markdown
-## 📋 Description
+## Description
 Brief description of changes made.
 
-## 🔧 Type of Change
+## Type of Change
 - [ ] Bug fix (non-breaking change that fixes an issue)
 - [ ] New feature (non-breaking change that adds functionality)
 - [ ] Breaking change (fix or feature that causes existing functionality to not work as expected)
 - [ ] Documentation update
 - [ ] Refactoring (no functional changes)
 
-## ✅ Testing
+## Testing
 - [ ] Tested locally
 - [ ] Image builds successfully
 - [ ] Container runs without errors
 - [ ] All features work as expected
 - [ ] Documentation updated
 
-## 📸 Screenshots (if applicable)
+## Screenshots (if applicable)
 
-## 🔗 Related Issues
+## Related Issues
 Fixes #(issue number)
 
-## 📝 Additional Notes
+## Additional Notes
 Any additional information or context.
 ```
 
@@ -356,22 +356,22 @@ Any additional information or context.
 
 ---
 
-## 📜 Code of Conduct
+## Code of Conduct
 
 ### Our Standards
 
-- 🤝 **Be respectful** and inclusive
-- 💬 **Communicate constructively**
-- 🎯 **Focus on project goals**
-- 🌟 **Welcome newcomers**
-- 📚 **Share knowledge freely**
+- **Be respectful** and inclusive
+- **Communicate constructively**
+- **Focus on project goals**
+- **Welcome newcomers**
+- **Share knowledge freely**
 
 ### Unacceptable Behavior
 
-- 🚫 Harassment or discrimination
-- 🚫 Offensive language or imagery
-- 🚫 Personal attacks
-- 🚫 Spam or off-topic discussions
+- Harassment or discrimination
+- Offensive language or imagery
+- Personal attacks
+- Spam or off-topic discussions
 
 ### Enforcement
 
@@ -384,28 +384,26 @@ Report issues to project maintainers.
 
 ---
 
-## 🙏 Recognition
+## Recognition
 
 Contributors who help improve our Docker images are recognized in:
-- 📋 **CHANGELOG.md** for their contributions
-- 🏆 **GitHub contributors** section
-- 🌟 **Release notes** for significant contributions
+- **CHANGELOG.md** for their contributions
+- **GitHub contributors** section
+- **Release notes** for significant contributions
 
 ---
 
-## 📞 Contact
+## Contact
 
-- 🐙 **GitHub Issues**: For bugs and feature requests
-- 💬 **Discussions**: For questions and community chat
-- 🔒 **Security**: Use private vulnerability reporting
-- 📧 **Email**: For private matters
+- **GitHub Issues**: For bugs and feature requests
+- **Discussions**: For questions and community chat
+- **Security**: Use private vulnerability reporting
+- **Email**: For private matters
 
 ---
 
 <div align="center">
 
-**Thank you for contributing to TundraSoft Docker Images! 🚀**
-
-*Together, we build better container solutions.*
+**Thank you for contributing to TundraSoft Docker Images!**
 
 </div>

@@ -1,8 +1,8 @@
-# 📦 Alpine S6 Examples
+# Alpine S6 Examples
 
 Practical examples showing how to build applications on top of the TundraSoft Alpine base image.
 
-## 🌐 Web Service Example
+## Web Service Example
 
 **File:** `Dockerfile.web-service`
 
@@ -43,7 +43,7 @@ docker stop web && docker rm web
 
 ---
 
-## ⏰ Cron Application Example
+## Cron Application Example
 
 **File:** `Dockerfile.cron-app`
 
@@ -103,7 +103,7 @@ Copy cron scripts directly in the Dockerfile (as shown in example).
 
 ---
 
-## 🚀 Quick Start Template
+## Quick Start Template
 
 Use this template to build your own application:
 
@@ -133,7 +133,7 @@ EXPOSE 8000
 
 ---
 
-## 📚 Tips & Tricks
+## Tips & Tricks
 
 ### Debugging S6 Services
 ```bash
@@ -191,7 +191,7 @@ docker run -v ./crons:/crons my-image
 
 ---
 
-## 🔗 Resources
+## Resources
 
 - [S6 Overlay Documentation](https://skarnet.org/software/s6/overview.html)
 - [Alpine Linux Packages](https://pkgs.alpinelinux.org/)
@@ -200,7 +200,7 @@ docker run -v ./crons:/crons my-image
 
 ---
 
-## ❓ Common Issues
+## Common Issues
 
 ### "Service not starting"
 1. Check service run script has correct shebang: `#!/command/execlineb -P`

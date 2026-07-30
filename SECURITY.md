@@ -1,14 +1,14 @@
 # Security
 
-## 🔒 Our commitment to security
+## Our commitment to security
 
-We take security seriously. This repository implements comprehensive, automated security scanning to protect against vulnerabilities, secrets exposure, and security threats. Our multi-layered security approach includes container scanning, code analysis, dependency checking, and continuous monitoring.
+This repository runs automated security scanning on every push, pull request, and daily schedule: container and dependency vulnerability scans (Trivy, Grype), static analysis (CodeQL, Semgrep), secret detection (GitLeaks), and license checks. Results are reported to the GitHub Security tab.
 
 We strive to keep every version updated with the latest security patches, however, it becomes quite chaotic and problematic to do so. Our primary focus is always on the latest version as typically these patches are available readily for the latest version.
 
 **Security is everyone's responsibility.** We encourage all contributors to:
 - Report security issues responsibly using GitHub's private vulnerability reporting
-- Review security scan results before merging pull requests  
+- Review security scan results before merging pull requests
 - Keep dependencies updated and follow security best practices
 - Never commit secrets, passwords, or sensitive information
 
