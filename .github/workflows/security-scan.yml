@@ -130,8 +130,8 @@ jobs:
           sarif_file: 'trivy-dependency-results.sarif'
 
   # Code Security Scanning
-  # Disabled: CodeQL is for traditional code (JS, Python, etc.)
-  # This project uses Dockerfile/Shell - handled by Semgrep instead
+  # CodeQL analyzes the GitHub Actions workflows (language: actions, no build).
+  # Semgrep covers Dockerfile/shell SAST separately.
   code-scan:
     name: Code Security Scan
     runs-on: ubuntu-latest
@@ -145,10 +145,10 @@ jobs:
   
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
-  
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
-  
+        with:
+          languages: actions
+          build-mode: none
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
 
