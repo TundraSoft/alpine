@@ -1,8 +1,7 @@
 name: Build and Test Docker Image
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,6 +28,8 @@ on:
 jobs:
 
   setup:
+    permissions:
+      contents: read
     if: |
       !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
@@ -70,23 +71,24 @@ jobs:
       - 
         name: Get S6 Versions
         id: s6-versions
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          S6_VERSIONS=""
-          # Fetch the latest 3 minor versions
-          MINOR_VERSIONS=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep -oP '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -Vu | tail -n 3)
-          for VERSION in $MINOR_VERSIONS
-          do
-            # Fetch the latest patch version for each minor version
-            PATCH_VERSION=$(curl -s https://api.github.com/repos/just-containers/s6-overlay/releases | jq -r '.[].tag_name' | grep "^${VERSION}" | sort -V | tail -n 1)
-            S6_VERSIONS+="${PATCH_VERSION#v} "
-          done
-          S6_VERSIONS=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -Rcn '[inputs] | sort | reverse')
-          LATEST_VERSION=$(echo $S6_VERSIONS | tr ' ' '\n' | jq -r '.[0]')
-          # echo "s6-versions=${S6_VERSIONS}" >> "$GITHUB_OUTPUT"
+          # Authenticated to lift the 60/hr anonymous GitHub API limit, which
+          # otherwise returns an empty tag_name -> S6_VERSION "null" -> "vnull"
+          # -> a 404 at image build time.
+          RELEASES=$(curl -s --retry 3 -H "Authorization: Bearer ${GH_TOKEN}" https://api.github.com/repos/just-containers/s6-overlay/releases)
+          # s6-overlay uses 4-part versions (e.g. 3.2.3.2); take the highest.
+          LATEST_VERSION=$(printf '%s' "$RELEASES" | jq -r '.[].tag_name' | grep -oP '^v[0-9]+(\.[0-9]+)+' | sort -V | tail -n 1)
+          LATEST_VERSION="${LATEST_VERSION#v}"
+          [ -n "$LATEST_VERSION" ] || { echo "Failed to resolve S6 version"; exit 1; }
           echo "latest-s6-version=${LATEST_VERSION}" >> "$GITHUB_OUTPUT"
       
   build:
     needs: setup
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
       
     strategy:
@@ -228,6 +230,8 @@ jobs:
   # a PR as "skipped").
   ci-gate:
     name: ci-gate
+    permissions:
+      contents: read
     needs: build
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
@@ -240,6 +244,8 @@ jobs:
   # Lets do a few chores
   update-readme:
     needs: [setup, build]
+    permissions:
+      contents: read
     if: github.ref_name == github.event.repository.default_branch || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     steps:
@@ -352,6 +358,8 @@ jobs:
   
   chore:
     needs: build
+    permissions:
+      contents: read
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
