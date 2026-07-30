@@ -1,4 +1,4 @@
-# 🏔️ TundraSoft Alpine Base Image
+# TundraSoft Alpine Base Image
 
 <!-- DESCRIPTION-START -->
 A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and developer-friendly utilities pre-installed.
@@ -11,37 +11,37 @@ A lightweight, secure Alpine Linux base image with S6 overlay, cron support, and
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [🚀 Quick Start](#-quick-start)
-- [🏷️ Available Tags](#️-available-tags)
-- [✨ Features](#-features)
-- [📖 Usage](#-usage)
+- [Quick Start](#quick-start)
+- [Available Tags](#available-tags)
+- [Features](#features)
+- [Usage](#usage)
   - [Basic Usage](#basic-usage)
   - [Environment Variables](#environment-variables)
   - [Volumes](#volumes)
-- [⚙️ Service Management](#️-service-management)
+- [Service Management](#service-management)
   - [S6 Service Architecture](#s6-service-architecture)
   - [Initialization Flow](#initialization-flow)
   - [Adding Custom Services](#adding-custom-services)
   - [Service Examples](#service-examples)
-- [⏰ Cron Jobs](#-cron-jobs)
+- [Cron Jobs](#cron-jobs)
   - [Dynamic Cron Setup](#dynamic-cron-setup)
   - [Cron Examples](#cron-examples)
   - [Security Best Practices](#security-best-practices)
-- [🔧 Building](#-building)
-- [� Examples](#-examples)
-- [�🔒 Security](#-security)
-- [📚 Components](#-components)
-- [📖 Reference](#reference)
-- [📝 Changelog](#changelog)
-- [🤝 Contributing](#-contributing)
+- [Building](#building)
+- [Examples](#examples)
+- [Security](#security)
+- [Components](#components)
+- [Reference](#reference)
+- [Changelog](#changelog)
+- [Contributing](#contributing)
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### 📦 Available Registries
+### Available Registries
 
 This image is available on multiple registries:
 
@@ -67,8 +67,8 @@ docker run -d \
   tundrasoft/alpine:latest
 ```
 
---- 
-## 🏷️ Available Tags
+---
+## Available Tags
 
 <!-- TAGS-START -->
 | Version | Tags |
@@ -86,19 +86,19 @@ docker run -d \
 
 ---
 
-## ✨ Features
+## Features
 
-- 🐧 **Latest Alpine Linux** - Minimal, secure base OS
-- 🔧 **S6 Overlay** - Advanced process supervision and service management
-- ⏰ **Dynamic Cron Support** - Environment variable-driven cron jobs
-- 👤 **Pre-configured User** - Non-root `tundra` user (UID/GID: 1000)
-- 🌍 **Timezone Support** - Easy timezone configuration
-- 🔄 **envsubst** - Environment variable substitution in config files
-- 🔒 **Security Focused** - Regular vulnerability scanning and updates
+- **Latest Alpine Linux** - Minimal, secure base OS
+- **S6 Overlay** - Process supervision and service management
+- **Dynamic Cron Support** - Environment variable-driven cron jobs
+- **Pre-configured User** - Non-root `tundra` user (UID/GID: 1000)
+- **Timezone Support** - Easy timezone configuration
+- **envsubst** - Environment variable substitution in config files
+- **Security Focused** - Regular vulnerability scanning and updates
 
 ---
 
-## 📖 Usage
+## Usage
 
 ### Basic Usage
 
@@ -141,9 +141,9 @@ FROM ghcr.io/tundrasoft/alpine:3.22.0
 
 ---
 
-## ⚙️ Service Management
+## Service Management
 
-This image uses [S6 Overlay](https://github.com/just-containers/s6-overlay) for advanced process supervision and service management. S6 is a lightweight init system that provides reliable service supervision, dependency management, and graceful shutdown handling.
+This image uses [S6 Overlay](https://github.com/just-containers/s6-overlay) for process supervision and service management. S6 is a lightweight init system that provides service supervision, dependency management, and graceful shutdown handling.
 
 ### S6 Service Architecture
 
@@ -192,7 +192,7 @@ Container Start
 Container Ready (running indefinitely)
 ```
 
-### 📋 Built-in Services
+### Built-in Services
 
 | Service | Type | Purpose | Dependencies |
 |---------|------|---------|--------------|
@@ -352,7 +352,7 @@ RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/app-service
 
 ---
 
-## ⏰ Cron Jobs
+## Cron Jobs
 
 ### Dynamic Cron Setup
 
@@ -455,11 +455,11 @@ docker run -d \
   tundrasoft/alpine:latest
 ```
 
-### 🔐 Security Best Practices
+### Security Best Practices
 
-> ⚠️ **Warning:** Cron files are executed with the `tundra` user privileges. Ensure they come from trusted sources.
+>  **Warning:** Cron files are executed with the `tundra` user privileges. Ensure they come from trusted sources.
 
-#### ✅ Secure Setup
+#### Secure Setup
 
 ```bash
 # Mount from read-only, trusted source
@@ -473,7 +473,7 @@ ls -la /secure/trusted/crons/
 # -rw-r--r-- - files not world-writable
 ```
 
-#### ❌ Insecure Patterns
+#### Insecure Patterns
 
 ```bash
 # DON'T: Mount /tmp (world-writable)
@@ -487,7 +487,7 @@ docker run -d -v /data/crons:/crons tundrasoft/alpine:latest
 # Any user could modify cron jobs!
 ```
 
-#### 🛡️ Hardening Tips
+#### Hardening Tips
 
 ```bash
 # 1. Use read-only mount
@@ -509,9 +509,9 @@ docker exec <container> crontab -l > /var/log/crontab-snapshot.txt
 
 ---
 
-## 🔧 Building
+## Building
 
-### 🏗️ Build Command
+### Build Command
 
 ```bash
 docker build \
@@ -520,7 +520,7 @@ docker build \
   -t my-alpine-image .
 ```
 
-### ⚙️ Build Arguments
+### Build Arguments
 
 <!-- BUILD-ARGS-START -->
 | Argument | Description | Example |
@@ -531,7 +531,7 @@ docker build \
 
 ---
 
-## � Examples
+## Examples
 
 Practical examples are available in the [examples/](examples/) directory:
 
@@ -542,36 +542,36 @@ See [examples/README.md](examples/README.md) for detailed build/run instructions
 
 ---
 
-## �🔒 Security
+## Security
 
-This repository implements comprehensive security scanning:
+This repository runs several security scanners:
 
-- 🛡️ **Multi-layered scanning** with Trivy, CodeQL, Semgrep, and Grype
-- 🔍 **Secret detection** with GitLeaks (runs early in build process)
-- 📊 **Automated reporting** to GitHub Security tab
-- 🔄 **Daily security scans** and vulnerability monitoring
+- **Multi-layered scanning** with Trivy, CodeQL, Semgrep, and Grype
+- **Secret detection** with GitLeaks (runs early in build process)
+- **Automated reporting** to GitHub Security tab
+- **Daily security scans** and vulnerability monitoring
 
 For security issues, please use [GitHub's private vulnerability reporting](https://github.com/TundraSoft/alpine/security/advisories/new).
 
 ---
 
-## 📚 Components
+## Components
 
-### 🏔️ Alpine Linux
-[Alpine Linux](https://alpinelinux.org/) is a security-focused, lightweight Linux distribution (~5MB) based on musl libc and BusyBox. Perfect for containerized applications with minimal resource requirements.
+### Alpine Linux
+[Alpine Linux](https://alpinelinux.org/) is a security-focused, lightweight Linux distribution (~5MB) based on musl libc and BusyBox.
 
 **Key features:**
-- Minimal image size (< 10MB base image)
+- Minimal footprint
 - Security-first design
 - Automatic security patches
 - Extensive package repository
 
-### 🔧 S6 Overlay
-[S6 Overlay](https://github.com/just-containers/s6-overlay) provides an advanced init system and process supervisor for containers.
+### S6 Overlay
+[S6 Overlay](https://github.com/just-containers/s6-overlay) provides an init system and process supervisor for containers.
 
 **Key features:**
 - Reliable process supervision and auto-restart
-- Sophisticated dependency management between services
+- Dependency management between services
 - Clean shutdown with configurable timeouts
 - Logging integration
 - Zero-downtime service reloading
@@ -581,7 +581,7 @@ For security issues, please use [GitHub's private vulnerability reporting](https
 - Services requiring specific startup/shutdown order
 - Applications needing health checks and auto-recovery
 
-### ⏰ Cron
+### Cron
 Full [crond daemon](https://en.wikipedia.org/wiki/Cron) from BusyBox with dynamic job loading and environment variable support.
 
 **Features:**
@@ -590,7 +590,7 @@ Full [crond daemon](https://en.wikipedia.org/wiki/Cron) from BusyBox with dynami
 - Logging to syslog
 - Per-user crontabs
 
-### 🔄 envsubst
+### envsubst
 [GNU gettext envsubst](https://www.gnu.org/software/gettext/manual/gettext.html#envsubst-Invocation) utility for environment variable substitution. Used for template expansion in configuration files and cron jobs.
 
 **Usage:**
@@ -599,7 +599,7 @@ envsubst < template.conf > final.conf
 envsubst '$VARIABLE1:$VARIABLE2' < config.tmpl
 ```
 
-### 🌍 Timezone Support
+### Timezone Support
 Complete timezone database (from `tzdata`) with `TZ` environment variable support for easy configuration.
 
 **Usage:**
@@ -617,7 +617,7 @@ docker run -e TZ=Asia/Tokyo tundrasoft/alpine:latest
 
 ---
 
-## 📖 Reference
+## Reference
 
 ### Container Lifecycle
 
@@ -700,7 +700,7 @@ docker run -e TZ=Asia/Tokyo tundrasoft/alpine:latest
 | Variable | Description |
 |----------|-------------|
 | `S6_CMD_WAIT_FOR_SERVICES_MAXTIME` | Max wait for service startup (0 = no limit) |
-| `S6_GLOBAL_PATH` | Search path for commands | 
+| `S6_GLOBAL_PATH` | Search path for commands |
 
 **Available for Custom Use:**
 
@@ -844,40 +844,40 @@ docker build --progress=plain .
 
 ### External Resources
 
-- 📖 [S6 Documentation](https://skarnet.org/software/s6/)
-- 📖 [S6-Overlay GitHub](https://github.com/just-containers/s6-overlay)
-- 📖 [Alpine Linux Documentation](https://wiki.alpinelinux.org/)
-- 📖 [Cron Format Guide](https://crontab.guru/)
-- 📖 [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
+- [S6 Documentation](https://skarnet.org/software/s6/)
+- [S6-Overlay GitHub](https://github.com/just-containers/s6-overlay)
+- [Alpine Linux Documentation](https://wiki.alpinelinux.org/)
+- [Cron Format Guide](https://crontab.guru/)
+- [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-1. 🍴 **Fork** the repository
-2. 🌟 **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. 💾 **Commit** changes: `git commit -m 'Add amazing feature'`
-4. 📤 **Push** to branch: `git push origin feature/amazing-feature`
-5. 🔄 **Open** a Pull Request
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/my-change`
+3. **Commit** changes: `git commit -m 'feat: describe your change'`
+4. **Push** to branch: `git push origin feature/my-change`
+5. **Open** a Pull Request
 
-### 📋 Issue Templates
+### Issue Templates
 
-- 🐛 **Bug Report**: Report issues with the image
-- ✨ **Feature Request**: Suggest improvements
-- 🔒 **Security**: Use private vulnerability reporting
+- **Bug Report**: Report issues with the image
+- **Feature Request**: Suggest improvements
+- **Security**: Use private vulnerability reporting
 
 ---
 
-## 📝 Changelog
+## Changelog
 
-This project maintains a comprehensive changelog following [Keep a Changelog](https://keepachangelog.com/) format.
+This project maintains a changelog following the [Keep a Changelog](https://keepachangelog.com/) format.
 
-### 📖 View Changelog
+### View Changelog
 
 - **Full Changelog**: See [CHANGELOG.md](./CHANGELOG.md)
 - **Changelog Guide**: Read [CHANGELOG-GUIDE.md](./CHANGELOG-GUIDE.md) for process details
 
-### 🤖 Automatic Updates
+### Automatic Updates
 
 The changelog is automatically updated when PRs are merged to `main`:
 
@@ -886,7 +886,7 @@ The changelog is automatically updated when PRs are merged to `main`:
 - Each entry includes PR number, title, and author
 - PR titles should be **clear and descriptive** for best results
 
-### ✍️ Writing Good PR Titles
+### Writing Good PR Titles
 
 For proper categorization, use conventional commit format:
 
@@ -902,9 +902,7 @@ See [CHANGELOG-GUIDE.md](./CHANGELOG-GUIDE.md) for detailed guidelines on mainta
 
 ---
 
-## 🤝 Contributing
-
-**Built with ❤️ by [TundraSoft](https://github.com/TundraSoft)**
+**Built by [TundraSoft](https://github.com/TundraSoft)**
 
 [View on GitHub](https://github.com/TundraSoft/alpine) • [Docker Hub](https://hub.docker.com/r/tundrasoft/alpine) • [Report Issue](https://github.com/TundraSoft/alpine/issues)
 

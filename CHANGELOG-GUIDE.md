@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project uses an automated changelog management system that maintains a comprehensive `CHANGELOG.md` file following the [Keep a Changelog](https://keepachangelog.com/) format.
+This project automatically maintains `CHANGELOG.md` following the [Keep a Changelog](https://keepachangelog.com/) format.
 
 ## How It Works
 
@@ -83,13 +83,13 @@ Each entry follows this structure:
 
 ### 1. Use Clear PR Titles
 
-✅ **Good PR Titles** (categorized automatically)
+ **Good PR Titles** (categorized automatically)
 - `feat: Add custom service examples to S6 overlay`
 - `fix: Resolve cron job timing issue`
 - `docs: Update README with troubleshooting guide`
 - `security: Patch container vulnerability in Alpine`
 
-❌ **Ambiguous PR Titles**
+ **Ambiguous PR Titles**
 - `Update something`
 - `WIP: Changes`
 - `Random fixes`
@@ -116,12 +116,12 @@ The workflow will link to the PR, which should link to the issues.
 
 The PR title becomes the changelog entry, so make it clear:
 
-✅ **Good**
+ **Good**
 ```
 docs: Add comprehensive S6 service documentation and examples
 ```
 
-❌ **Poor**
+ **Poor**
 ```
 docs update
 ```
